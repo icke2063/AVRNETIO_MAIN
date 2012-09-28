@@ -164,14 +164,14 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 #define USE_ADC			0
 
-#define USE_OW			0	//PINA 7 reserviert
-#define USE_I2C			0
-#define USE_S0          0
-#define	USE_WATCHDOG	0
-#define	USE_WOL			0
-#define USE_NTP			0 // 1= NTP Client on
+//#define USE_OW			0	//PINA 7 reserviert
+//#define USE_I2C			0
+//#define USE_S0          0
+//#define	USE_WATCHDOG	0
+//#define	USE_WOL			0
+//#define USE_NTP			0 // 1= NTP Client on
 
-#define USE_RULE  		0
+//#define USE_RULE  		0
 
 
 
@@ -188,20 +188,20 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 	#define	ADC_PA	0x00
 #endif
 
-#if	USE_OW
-	#define	OW_PA		0x80
-#else
+//#if	USE_OW
+//	#define	OW_PA		0x80
+//#else
 	#define	OW_PA		0x00
-#endif
+//#endif
 
 // PORTA: restlichen digitalen Ports: Eingang/Ausgang
 
 //0-3 -> dig. input, 4-6 -> analog. input, 7 - 1-Wire
-#define DIG_IN_PA		0x0F & ~OW_PA & ~ADC_PA	//als Eingang markieren
-#define DIG_OUT_PA		0x00 & ~OW_PA & ~ADC_PA	//als Ausgang markieren
+#define DIG_IN_PA		0x0F & ~ADC_PA	//als Eingang markieren
+#define DIG_OUT_PA		0x00 & ~ADC_PA	//als Ausgang markieren
 
-#define DIG_IMP_PA		0x00 & ~OW_PA & ~ADC_PA	//als IMPULSE markieren
-#define DIG_SW_PA		0x00 & ~OW_PA & ~ADC_PA	//als SCHALTER markieren
+#define DIG_IMP_PA		0x00 & ~ADC_PA	//als IMPULSE markieren
+#define DIG_SW_PA		0x00 & ~ADC_PA	//als SCHALTER markieren
 
 #define OUTA 			((0x00 | DIG_OUT_PA) & ~DIG_IN_PA)
 
@@ -211,35 +211,35 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 //PORTC -> 0-1 -> I2C;2-7 -> dig. I/O
 
-#if	USE_I2C
-#define	I2C_PC		0x03
-#else
-#define	I2C_PC		0x00
-#endif
+//#if	USE_I2C
+//#define	I2C_PC		0x03
+//#else
+//#define	I2C_PC		0x00
+//#endif
 
-#define DIG_IN_PC		0x00 & ~I2C_PC	//als Eingang markieren
-#define DIG_OUT_PC		0xFF & ~I2C_PC	//als Ausgang markieren
+#define DIG_IN_PC		0x00  	//als Eingang markieren
+#define DIG_OUT_PC		0xFF 	//als Ausgang markieren
 
-#define DIG_IMP_PC		0xFF & ~I2C_PC	//als IMPULSE markieren
-#define DIG_SW_PC		0x00 & ~I2C_PC	//als SCHALTER markieren
+#define DIG_IMP_PC		0xFF 	//als IMPULSE markieren
+#define DIG_SW_PC		0x00 	//als SCHALTER markieren
 
 #define OUTC 			((0x00 | DIG_OUT_PC) & ~DIG_IN_PC)
 
 
 //PORTD
 
-#if	USE_S0
-#define	S0_PD		0x0C
-#else
-#define	S0_PD		0x00
-#endif
+//#if	USE_S0
+//#define	S0_PD		0x0C
+//#else
+//#define	S0_PD		0x00
+//#endif
 
 
-#define DIG_IN_PD		0xF0 & ~S0_PD & ~0x03	//als Eingang markieren
-#define DIG_OUT_PD		0x00 & ~S0_PD & ~0x03	//als Ausgang markieren
+#define DIG_IN_PD		0xF0 & ~0x03	//als Eingang markieren
+#define DIG_OUT_PD		0x00 & ~0x03	//als Ausgang markieren
 
-#define DIG_IMP_PD		0x00 & ~S0_PD & ~0x03	//als IMPULSE markieren
-#define DIG_SW_PD		0x00 & ~S0_PD & ~0x03	//als SCHALTER markieren
+#define DIG_IMP_PD		0x00 & ~0x03	//als IMPULSE markieren
+#define DIG_SW_PD		0x00 & ~0x03	//als SCHALTER markieren
 
 
 //PORTD -> 0-1 -> UART; 2-3 -> S0; 4-7 -> dig. I/O
@@ -288,58 +288,58 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 	//f�r Username:Passwort
 	#define HTTP_AUTH_STRING "admin:uli1"
 
-#if	USE_OW
+//#if	USE_OW
 // 1-Wire-Einstellungen
 // --------------------
 
 	// 1-Wire ja/nein (0=nein, 1=ja)
 
 	// max. Anzahl der Sensoren
-	#define MAXSENSORS	20
+//	#define MAXSENSORS	20
 	// z.Z. nur EIN 1-Wire-Bus
-	#define OW_ONE_BUS	1
+//	#define OW_ONE_BUS	1
 
 	// Port fuer 1-Wire
-	#define OW_PIN  PA7
-	#define OW_IN   PINA
-	#define OW_OUT  PORTA
-	#define OW_DDR  DDRA
+//	#define OW_PIN  PA7
+//	#define OW_IN   PINA
+//	#define OW_OUT  PORTA
+//	#define OW_DDR  DDRA
 
 	// ROM-IDs der DS1820 m�ssen "per Hand" eingetragen werden!
 	// Damit kann man am leichtesten einem Sensor eine Aufgabe zuordnen.
 	// Die IDs kann man mit dem Flash-File "sensoren.hex" ermitteln.
-	#define OW_ID_T01	{0x28,0x65,0x3E,0x15,0x02,0x00,0x00,0xE6}
-	#define OW_ID_T02	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T03	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T04	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T05	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T06	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T07	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_T08	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
-	#define OW_ID_Last	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+//	#define OW_ID_T01	{0x28,0x65,0x3E,0x15,0x02,0x00,0x00,0xE6}
+//	#define OW_ID_T02	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T03	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T04	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T05	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T06	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T07	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_T08	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} // leer
+//	#define OW_ID_Last	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 
 	// Startwerte in ow_array
-	#define OW_START	150
-	#define OW_MINMAX	0
+//	#define OW_START	150
+//	#define OW_MINMAX	0
 
 	// Entsprechende Ortszuweisung f�r die Sensoren fuer webpage.h:
-	#define T00	"Raum_1"
-	#define T01	"Raum_2"
-	#define T02	"Aussen"
-	#define T03	"Pumpe VL"
-	#define T04	"Pumpe RL"
-	#define T05	"Reserve"
-	#define T06	"Reserve"
-	#define T07	"Reserve"
+//	#define T00	"Raum_1"
+//	#define T01	"Raum_2"
+//	#define T02	"Aussen"
+//	#define T03	"Pumpe VL"
+//	#define T04	"Pumpe RL"
+//	#define T05	"Reserve"
+//	#define T06	"Reserve"
+//	#define T07	"Reserve"
 
 
-#endif	//USE_OW
+//#endif	//USE_OW
 
 // Rest
 // ----
 
 	// Schaltautomatik installieren (-> main.c, httpd.c, webpage.h)
-	#define USE_AUTOMATIK	0
+//	#define USE_AUTOMATIK	0
   
 
 	// Feuchtesensor HIH4000 (experimentell)
@@ -349,7 +349,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 	
 	//Emailversand benutzen? Konfiguration des
 	//Emailclient in der Sendmail.h
-	#define USE_MAIL        0
+//	#define USE_MAIL        0
     
 	//Commandos und Ausgaben erfolgen �ber Telnet
 	//UART/RS232 geht dann nicht mehr!
