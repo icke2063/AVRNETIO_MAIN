@@ -33,8 +33,8 @@
 #include "usart.h"
 #include "httpd.h"
 #include "telnetd.h"
-#include "networkcard/enc28j60.h"
-#include "networkcard/rtl8019.h"
+#include "enc28j60.h"
+#include "rtl8019.h"
 #include "config.h"
 #include "timer.h"
 

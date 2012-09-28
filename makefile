@@ -61,6 +61,8 @@ ifeq ($(MCU), atmega128)
 	HEX_FILE_NAME = MEGA128
 endif
 
+
+BUILD_DIR = build
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
 
@@ -73,16 +75,33 @@ OPT = s
 
 # If there is more than one source file, append them above, or modify and
 # uncomment the following:
-SRC =  main.c usart.c stack.c timer.c cmd.c base64.c base_webpage.c
+# Base
+LOCAL_SRC = 	base/src/main.c	\
+	base/src/usart.c	\
+	base/src/stack.c	\
+	base/src/timer.c	\
+	base/src/cmd.c	\
+	base/src/base64.c	\
+	base/src/telnetd.c
 
-SRC += networkcard/enc28j60.c 
+# networkcard
+LOCAL_SRC +=	base/src/enc28j60.c 
+# SRC += base/src/rtl8019.c
+# httpd
+LOCAL_SRC += 	base/src/httpd.c	\
+	base/src/http_get.c	\
+	base/src/base_webpage.c
 
-# SRC += networkcard/rtl8019.c
+# extra functions
 
-SRC += httpd.c telnetd.c ntp.c
+
+#ADC
+#SRC += ADC/src/analog.c
+#NTP
+#SRC += NTP/src/ntp.c
+
 #lcd.c udp_lcd.c 
-
-SRC += http_get.c analog.c sendmail.c
+#SRC += sendmail.c
 
 #SRC += camera/cam.c 
 
@@ -90,17 +109,20 @@ SRC += http_get.c analog.c sendmail.c
 
 # RoBue:
 # 1-Wire-Unterst�tzung
-SRC += 1-wire/crc8.c 1-wire/delay.c 1-wire/ds18x20.c 1-wire/onewire.c
-
+#SRC += 1-wire/crc8.c 1-wire/delay.c 1-wire/ds18x20.c 1-wire/onewire.c
+# icke2063:
 # S0 Unterst�tzung
-SRC += S0/S0.c
+#SRC += S0/S0.c
 
 # Regeln Unterst�tzung
-SRC += rules/rules.c rules/rules_webpage.c
+#SRC += rules/rules.c rules/rules_webpage.c
 
 # cni:
 # Add LibSHT
 # SRC += sht/libsht.c
+
+SRC = $(addprefix $(BUILD_DIR)/,$(LOCAL_SRC))
+
 
 # List Assembler source files here.
 # Make them always end in a capital .S.  Files ending in a lowercase .s
@@ -114,7 +136,7 @@ ASRC =
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
-EXTRAINCDIRS =
+EXTRAINCDIRS =base/config/ base/inc/
 
 
 # Optional compiler flags.
@@ -236,7 +258,7 @@ SIZE = avr-size
 AVRDUDE = avrdude
 
 
-REMOVE = rm -f
+REMOVE = rm -rf
 COPY = cp
 
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
@@ -265,6 +287,7 @@ MSG_CLEANING = Cleaning project:
 
 
 
+
 # Define all object files.
 OBJ = $(SRC:.c=.o) $(ASRC:.S=.o) 
 
@@ -279,7 +302,7 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 # Default target.
-all: begin gccversion sizebefore $(TARGET).elf $(TARGET).hex $(TARGET).lss
+all: begin gccversion sizebefore copysrc $(TARGET).elf $(TARGET).hex $(TARGET).lss
 	$(TARGET).lss $(TARGET).sym sizeafter finished end
 
 
@@ -342,6 +365,9 @@ program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 
+# Copy src files into build directory
+copysrc: $(BUILD_DIR)
+	cp -r base -t $(BUILD_DIR)/
 
 
 # Create final output files (.hex, .eep) from ELF output file.
@@ -387,6 +413,10 @@ $(TARGET).elf: $(OBJ)
 	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 
+$(BUILD_DIR):
+	mkdir -p $@
+
+
 # Compile: create assembler files from C source files.
 %.s : %.c
 	$(CC) -S $(ALL_CFLAGS) $< -o $@
@@ -397,9 +427,6 @@ $(TARGET).elf: $(OBJ)
 	@echo
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
-
-
-
 
 
 
@@ -424,6 +451,7 @@ clean_list :
 	$(REMOVE) $(LST)
 	$(REMOVE) $(SRC:.c=.s)
 	$(REMOVE) $(SRC:.c=.d)
+	$(REMOVE) $(BUILD_DIR)
 
 
 # Automatically generate C source code dependencies. 

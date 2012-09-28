@@ -162,7 +162,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 	
 
 
-#define USE_ADC			1
+#define USE_ADC			0
 
 #define USE_OW			0	//PINA 7 reserviert
 #define USE_I2C			0

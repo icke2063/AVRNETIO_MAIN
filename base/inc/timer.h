@@ -27,7 +27,7 @@
 	#include <avr/io.h>
 	#include "usart.h"
 	#include "stack.h"
-	#include "ntp.h"
+//	#include "ntp.h"
     #include "cmd.h"
 
 	#if defined (__AVR_ATmega644__) || defined (__AVR_ATmega644P__)

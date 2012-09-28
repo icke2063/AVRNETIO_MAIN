@@ -27,7 +27,7 @@
 ----------------------------------------------------------------------------*/
 
 #include <avr/io.h>
-#include "config.h"
+#include <config.h>
 
 #if USE_ADC
 #include "analog.h"
@@ -40,8 +40,8 @@
 #endif
 
 #include "usart.h"
-#include "networkcard/enc28j60.h"
-//#include "networkcard/rtl8019.h"
+#include "enc28j60.h"
+//#include "rtl8019.h"
 #include "stack.h"
 #include "timer.h"
 

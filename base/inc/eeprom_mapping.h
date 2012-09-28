@@ -16,10 +16,10 @@
 
 	#define NTP_IP_EEPROM_STORE 	50	//4 Byte
 
-#if USE_WOL
-	#define WOL_MAC_EEPROM_STORE	60 //6 Byte
-	#define WOL_BCAST_EEPROM_STORE	66 //4 Byte
-#endif
+//#if USE_WOL
+//	#define WOL_MAC_EEPROM_STORE	60 //6 Byte
+//	#define WOL_BCAST_EEPROM_STORE	66 //4 Byte
+//#endif
 
 
 	#define NAME_EEPROM_STORE	70	//EEPROM ADDRESS
@@ -27,13 +27,13 @@
 	#define	NAME_COUNT			24	//NUMBER OF USEABLE PINS
 	#define NAME_EEPROM_END		NAME_EEPROM_STORE + (MAX_NAME_LENGTH*NAME_COUNT)+1
 
-#if USE_S0
-	#define S0_EEPROM_STORE	(NAME_EEPROM_END +1)
-#endif
+//#if USE_S0
+//	#define S0_EEPROM_STORE	(NAME_EEPROM_END +1)
+//#endif
 
-#if USE_RULE
-	#define RULES_EEPROM_STORE	(S0_EEPROM_STORE +1)
-	#define	RULES_MAX_COUNT		100
-#endif
+//#if USE_RULE
+//	#define RULES_EEPROM_STORE	(S0_EEPROM_STORE +1)
+//	#define	RULES_MAX_COUNT		100
+//#endif
 
 #endif /* EEPROM_MAPPING_H_ */
