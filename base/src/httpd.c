@@ -56,11 +56,6 @@ char time_string_Buffer[10];
 
 // unsigned char internal_message[10];
 
-#if USE_OW
-// -> main.c (Speicherplatz f�r 1-wire Sensorwerte)
-extern volatile int16_t ow_array[MAXSENSORS];
-#endif
-
 PROGMEM char http_header1[]={	"HTTP/1.0 200 Document follows\r\n"
 								"Server: AVR_WEB_Switch\r\n"
 								"Content-Type: text/html\r\n\r\n"};
@@ -149,9 +144,6 @@ void httpd_stack_clear (unsigned char index)
 	http_entry[index].post_ptr = post_in;
 	http_entry[index].post_ready_ptr = post_ready;
 	http_entry[index].hdr_end_pointer = rx_header_end;
-	#if USE_CAM
-	http_entry[index].cam = 0;
-	#endif //USE_CAM				
 	HTTP_DEBUG("\r\n**** NEUE HTTP ANFORDERUNG ****\r\n\r\n");	
 	return;
 }
@@ -511,11 +503,6 @@ void httpd_data_send (unsigned char index)
 			if(base_create_httpd_data(&http_entry[index].new_page_pointer, var_conversion_buffer,eth_buffer,&a)>0)continue;
 
 
-#if USE_RULE
-			if(rules_create_httpd_data(&http_entry[index].new_page_pointer, var_conversion_buffer,eth_buffer,&a)>0)continue;
-#endif
-
-
 			// Variable
 			if (strncasecmp_P("VA@",http_entry[index].new_page_pointer,3)==0)
 			{	
@@ -639,95 +626,6 @@ void httpd_data_send (unsigned char index)
 	       			a = a + (str_len-1);
        			http_entry[index].new_page_pointer=http_entry[index].new_page_pointer+3;
 			}
-
-
-/*
-
-			// Schaltzeit
-			if (strncasecmp_P("T0@",http_entry[index].new_page_pointer,3)==0)
-			{	
-			itoa (var_array[20],var_conversion_buffer,10);
- 	      			strcpy(time_string_Buffer,var_conversion_buffer);
-        			strcat (time_string_Buffer,":");
-				if ( var_array[21] < 10 ) {
-					strcat (time_string_Buffer,"0");
-						}
-        			itoa (var_array[21],var_conversion_buffer,10);
-        			strcat(time_string_Buffer,var_conversion_buffer);
-               			str_len = strnlen(time_string_Buffer,10);
-        			memmove(&eth_buffer[TCP_DATA_START+a],time_string_Buffer,str_len);
-	       			a = a + (str_len-1);
-       			http_entry[index].new_page_pointer=http_entry[index].new_page_pointer+3;	
-			}
-			if (strncasecmp_P("T1@",http_entry[index].new_page_pointer,3)==0)
-			{	
-			itoa (var_array[22],var_conversion_buffer,10);
- 	      			strcpy(time_string_Buffer,var_conversion_buffer);
-        			strcat (time_string_Buffer,":");
-				if ( var_array[23] < 10 ) {
-					strcat (time_string_Buffer,"0");
-						}
-        			itoa (var_array[23],var_conversion_buffer,10);
-        			strcat(time_string_Buffer,var_conversion_buffer);
-               			str_len = strnlen(time_string_Buffer,10);
-        			memmove(&eth_buffer[TCP_DATA_START+a],time_string_Buffer,str_len);
-	       			a = a + (str_len-1);
-       			http_entry[index].new_page_pointer=http_entry[index].new_page_pointer+3;		
-			}				
-
-*/
-
-#if USE_OW
-	
-			/*
-			*	1-Wire Temperatursensoren
-			*	-------------------------
-			*	OW@nn	nn = 00 bis MAXSENSORS-1 gibt Werte in 1/10 �C aus
-			*	OW@mm	mm = 20 bis MAXSENSORS-1+20 gibt Werte in �C mit einer Nachkommastelle aus
-			*	d.h. OW@nn f�r Balkenbreite verwenden und OW@mm f�r Celsius-Anzeige
-			*/
-			if (strncasecmp_P("OW@",http_entry[index].new_page_pointer,3)==0)	
-			{
-				b = (pgm_read_byte(http_entry[index].new_page_pointer+3)-48)*10;
-				b +=(pgm_read_byte(http_entry[index].new_page_pointer+4)-48);
-					
-					// RoBue:
-					// Wert auslesen
-					int16_t ow_temp = ow_array[b];
-					str_len = 0;
-	
-					// evtl. Vorzeichen einfuegen:	
-					if ( ow_temp < 0 ) {
-						ow_temp *= (-1);
-						var_conversion_buffer[0] = '-';
-						memmove(&eth_buffer[TCP_DATA_START+a],var_conversion_buffer,1);
-						a ++;
-					}
-					
-					// RoBue:
-					// Wert vor dem Komma einf�gen
-					itoa (ow_temp/10,var_conversion_buffer,10);
-					str_len += strnlen(var_conversion_buffer,CONVERSION_BUFFER_LEN);
-					
-					// RoBue:
-					// Komma einf�gen
-					var_conversion_buffer[str_len] = ',';
-					str_len++;
-					memmove(&eth_buffer[TCP_DATA_START+a],var_conversion_buffer,str_len);
-					a += str_len;
-
-					// RoBue:
-					// Wert nach dem Komma einf�gen					
-					itoa (ow_temp%10,var_conversion_buffer,10);
-					str_len = strnlen(var_conversion_buffer,CONVERSION_BUFFER_LEN);
-					memmove(&eth_buffer[TCP_DATA_START+a],var_conversion_buffer,str_len);
-					a += str_len-1;
-
-					http_entry[index].new_page_pointer=http_entry[index].new_page_pointer+5;
-
-			}
-
-#endif	// USE_OW
 
 
 			//Einsetzen des Port Status %PORTxy durch "checked" wenn Portx.Piny = 1

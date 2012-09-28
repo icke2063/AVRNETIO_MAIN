@@ -53,46 +53,6 @@ COMMAND_STRUCTUR COMMAND_TABELLE[] = // Befehls-Tabelle
 	{"PORTCTOG",command_togPORTC},
 	
 
-	#if USE_PORTD_SCHALT
-	 {"PORTD",command_portd},
-	 {"PORTDSET",command_setPORTD},
-	#endif
-	
-	#if USE_PORTD_EING
-	 {"PORTD",command_portd},
-	 {"PORTDGET",command_getPORTD},
-	#endif
-
-  #if USE_RULE
-    {"A_R",add_rule},
-    {"D_R",del_rule},
-    {"S_R",show_rule},
-    {"L_R",list_rules},
-    {"C_R",check_rule},
-    {"R_R",run_rule},
-  #endif
-
-  #if USE_S0
-    {"S0",command_S0},
-  #endif
-
-	#if USE_NTP
-	{"NTP",command_ntp},
-	{"NTPR",command_ntp_refresh},	
-	#endif //USE_NTP
-
-	#if USE_WOL
-	{"WOL",command_wol},
-	#endif //USE_WOL
-
-	#if USE_MAIL
-	{"mail", command_mail},
-	#endif //USE_MAIL
-
-	#if USE_OW
-	{"OW", command_ow},
-	#endif //USE_OW
-
 	#if HELPTEXT
 	{"HELP",command_help},
 	{"?",command_help},
@@ -124,55 +84,9 @@ COMMAND_STRUCTUR COMMAND_TABELLE[] = // Befehls-Tabelle
 		"PORTCSET - set PORTC 0-7 0/1\r\n"
 		"PORTCTOG - toggle PORTC 0-7 xxxx(ms)\r\n"
 
-		#if USE_PORTD_SCHALT // kein LCD, Serve, SHT71 !!!
-		"PORTD    - list PORTD\r\n"
-		"PORTDSET - set PORTD 0-7 0/1\r\n"
-		#endif
-		
-    #if USE_PORTD_EING // kein LCD, Serve, SHT71 !!!
-		"PORTD    - list PORTD\r\n"
-		"PORTDGET - get PORTD 0-7\r\n"
-		#endif
-
-    #if USE_RULE
-    
-    "A_R     - add new Rule to EEPROM\r\n"
-    "           [A..D,L,W];[0..255];[<,>,=,!,~];[A..D,L,W];[A..D];[0..7];[0..1]\r\n"
-    "           If (PINA1>55)then PORTC3=EIN -> [A][1][>][W][55][C][3][1]\r\n"
-    "D_R     - delete rule [0..99]\r\n"
-    "S_R     - show rule [0..99]\r\n"
-    "L_R     - list all rules\r\n"
-    "C_R     - check rule [0..99]\r\n"
-    "R_R     - run rule [0..99]"
-    
-    #endif
-
-
-    #if USE_S0 // kein LCD, Serve, SHT71 !!!
-		"S0    - get S0 Data\r\n"
-		#endif
-
-		#if USE_NTP
-		"NTP    - list/change NTP\r\n"
-		"NTPR   - NTP Refresh\r\n"
-		#endif //USE_NTP
-		"MAC    - list MAC-address\r\n"
-
-		#if USE_OW
-		"OW     - list 1-Wire temperatures\r\n"
-		#endif //USE_OW
-
 //		"VER    - list version number\r\n"
 		"SV     - set variable\r\n"
 //		"PING   - send Ping\r\n"
-
-		#if USE_MAIL
-		"MAIL   - send E_MAIL\r\n"
-		#endif //USE_MAIL
-
-		#if USE_WOL
-		"WOL    - send WOL / set MAC / set MAC and IP\r\n"
-		#endif //USE_WOL
 
 	};
 #endif
@@ -249,17 +163,6 @@ void write_eeprom_ip (unsigned int eeprom_adresse)
 			eeprom_write_byte((unsigned char *)(eeprom_adresse + count),variable[count]);
 		}
 	}
-}
-
-//------------------------------------------------------------------------------
-//print/edit NTP Server IP
-void command_ntp (void)
-{
-	#if USE_NTP
-	write_eeprom_ip(NTP_IP_EEPROM_STORE);
-	(*((unsigned long*)&ntp_server_ip[0])) = get_eeprom_value(NTP_IP_EEPROM_STORE,NTP_IP);
-	usart_write("NTP_Server: %1i.%1i.%1i.%1i\r\n",ntp_server_ip[0],ntp_server_ip[1],ntp_server_ip[2],ntp_server_ip[3]);
-	#endif //USE_NTP
 }
 
 //------------------------------------------------------------------------------
@@ -364,55 +267,6 @@ void command_time (void)
 	usart_write ("\n\rTIME: %2i:%2i:%2i\r\n",hh,mm,ss);
 }
 
-//------------------------------------------------------------------------------
-//Time Refresh via NTP-Server
-void command_ntp_refresh (void)
-{
-	#if USE_NTP
-	ntp_request();
-	#endif //USE_NTP
-}
-
-//------------------------------------------------------------------------------
-//Sendet eine fertige E-MAIL
-#if USE_MAIL
-void command_mail (void)
-{
-	mail_enable = 1;
-}
-#endif //USE_MAIL
-
-//------------------------------------------------------------------------------
-//
-#if USE_WOL
-void command_wol (void)
-{
-	
-	// EEPROM beschreiben, falls Parameter angegeben wurden
-	if ((*((unsigned int*)&variable[0]) != 0x00000000) || (*((unsigned int*)&variable[1]) != 0x00000000) || (*((unsigned int*)&variable[2]) != 0x00000000))
-	{	
-		//schreiben der MAC
-		for (unsigned char count = 0; count<6; count++)
-		{
-			eeprom_busy_wait ();
-			eeprom_write_byte((unsigned char *)(WOL_MAC_EEPROM_STORE + count),variable[count]);
-		}
-		//zus�tzlich schreiben der Broadcast-Adresse, falls vorhandenden
-		for (unsigned char count = 0; count<4 && (*((unsigned int*)&variable[6]) != 0x00000000);count++)
-		{
-			eeprom_busy_wait ();
-			eeprom_write_byte((unsigned char*)(WOL_BCAST_EEPROM_STORE + count),variable[count+6]);
-		}
-		//init
-		wol_init();
-	}else{
-		//MagicPacket senden
-		wol_request();
-	}
-	
-}
-#endif //USE_WOL
-
 /*
 //------------------------------------------------------------------------------
 // Sende "Ping" an angegebene Adresse
@@ -450,29 +304,6 @@ void command_help (void)
 #endif //HELPTEXT
 }
 
-#if USE_OW
-//------------------------------------------------------------------------------
-// print Temperaturen
-void command_ow (void)
-{
-// ist schon in main.c erw�hnt !!!
-// Speicherplatz f�r 1-wire Sensorwerte
-extern volatile int16_t ow_array[MAXSENSORS];	
-uint8_t i;
-int16_t TWert;
-for(i=0;i<MAXSENSORS;i++)
-	{
-	TWert = ow_array[i];
-	usart_write ("Sensor %i: ",i);
-	// Vorzeichen
-	if ( ow_array[i] < 0 ) {
-		usart_write ("-");
-		TWert *= (-1);
-	}
-	usart_write ("%i,%i\r\n",(TWert/10),(TWert%10));
-	}					
-}
-#endif
 
 //------------------------------------------------------------------------------
 // print PORTA
@@ -589,55 +420,6 @@ void command_togPORTC (void)
 
 
 
-#if USE_PORTD_SCHALT // Kein LCD, kein Servo, kein SHT71 an PORTD
-//------------------------------------------------------------------------------
-// print Ausgabewert von PORTD2-7
-void command_portd (void)
-{
-	usart_write ("D4: %i\r\n",(PIND&0b00010000)>>4);	
-	usart_write ("D5: %i\r\nD6: %i\r\nD7: %i\r\n",(PIND&0b00100000)>>5,(PIND&0b01000000)>>6,(PIND&0b10000000)>>7);	
-}
-
-//------------------------------------------------------------------------------
-//PORTD setzen
-void command_setPORTD (void)
-{
-	usart_write("setportD %1i.%1i\r\n",variable[0],variable[1]);    
-	if (variable[1] == 1)
-		PORTD = PORTD |= (1<<variable[0]) ; 
-		//  setzt Bit  in PORT und setzt damit Pin auf high 
-	else if (variable[1] == 0)
-		PORTD = PORTD &= ~(1<<variable[0]);
-		//l�scht Bit  in PORT und setzt damit Pin auf low    
-	else
-		usart_write("ERROR PARAMETER  [Pin.Status]\r\n");
-}
-#endif
-
-
-
-#if USE_PORTD_EING // Kein LCD, kein Servo, kein SHT71 an PORTD
-//------------------------------------------------------------------------------
-// print Ausgabewert von PORTD2-7
-void command_portd (void)
-{
-	usart_write ("D4: %i\r\n",(PIND&0b00010000)>>4);	
-	usart_write ("D5: %i\r\nD6: %i\r\nD7: %i\r\n",(PIND&0b00100000)>>5,(PIND&0b01000000)>>6,(PIND&0b10000000)>>7);	
-}
-
-void command_getPORTD (void)
-{
-	// Digitalwerte (0/1) -> PORTD4-7
-	if(variable[0]>=4 && variable[0]<=7)
-		{
-		usart_write ("%i\r\n",PIND&(1<<(int)variable[0]));
-		}
-
-}
-
-#endif
-
-
 void eeprom_read (void)
 {
   unsigned char value[1];
@@ -660,97 +442,3 @@ void eeprom_write (void)
 			eeprom_write_byte((unsigned char *)(addi),variable[1]);
 		
 }
-
-	#if USE_RULE
-	void add_rule (void)
-	{
-    RULES_STRUCTUR tmp;
-   
-    tmp.elem_A=(unsigned char)variable[0];
-    tmp.elem_A_ID=(uint8_t)variable[1];
-    tmp.comp=(unsigned char)variable[2];
-    tmp.elem_B=(unsigned char)variable[3];
-    tmp.elem_B_ID=(uint8_t)variable[4];
-    tmp.actor=(unsigned char)variable[5];
-    tmp.act_ID=(uint8_t)variable[6];
-    tmp.act_value=(uint8_t)variable[7];
-
-        
-    eeprom_add_rule(&tmp);
-    
-    usart_write("Regel:If ( %c%i %c %c%i ) then %c%i = %i \r\n",tmp.elem_A,tmp.elem_A_ID,tmp.comp,tmp.elem_B,tmp.elem_B_ID,tmp.actor,tmp.act_ID,tmp.act_value);
-		
-  }
-  
-    
-  void del_rule (void)
-	{
-    uint8_t erg;
-    
-    if(eeprom_del_rule(variable[0]))
-    {   
-      usart_write("Regel(%i)entfernen:%i \r\n",variable[0],erg);
-    }
-  }
-  
-  void show_rule (void)
-	{
-    RULES_STRUCTUR tmp;
-    
-    if(eeprom_get_rule(variable[0],&tmp))
-    {
-      usart_write("Regel(%i):If ( %c%i %c %c%i ) then %c%i = %i \r\n",variable[0],tmp.elem_A,tmp.elem_A_ID,tmp.comp,tmp.elem_B,tmp.elem_B_ID,tmp.actor,tmp.act_ID,tmp.act_value);
-		}
-        
-  }
-  
-  void run_rule (void)
-	{
-    if(eeprom_run_rule(variable[0]))
-    {
-      usart_write("Regel(%i): erfolgreich \r\n",variable[0]);
-		}
-        
-  }
-  
-  void list_rules (void)
-  {
-    uint8_t count,i;
-    RULES_STRUCTUR hilf;
-  
-    //aktuelle Anzahl auslesen
-		count = get_rule_count();
-		
-		for(i=1;i<=count;i++)
-    { 
-      if(eeprom_get_rule(i,&hilf))
-      {
-        usart_write("Regel(%i): If ( %c%i %c %c%i ) then %c%i = %i \r\n",i,hilf.elem_A,hilf.elem_A_ID,hilf.comp,hilf.elem_B,hilf.elem_B_ID,hilf.actor,hilf.act_ID,hilf.act_value);
-      }
-      
-		}
-  
-  
-  }
-  
-  void check_rule (void)
-  {
-    usart_write("Regel (%i) = %i\r\n",variable[0],eeprom_check_rule(variable[0]));
-  }
-  
-  
-  #endif
-
-#if USE_S0 // Kein LCD, kein Servo, kein SHT71 an PORTD
-//------------------------------------------------------------------------------
-// print Ausgabewert von S0
-void command_S0 (void)
-{
-	S0_data(variable[0]);		
-}
-
-//------------------------------------------------------------------------------
-
-#endif
-
-//------------------------------------------------------------------------------

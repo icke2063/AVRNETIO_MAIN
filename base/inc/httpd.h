@@ -29,7 +29,6 @@
 	#include <avr/pgmspace.h>
 	#include "stack.h"
 	#include "base64.h"
-//	#include "analog.h"
     
 	
 	#define HTTPD_PORT	80
@@ -68,9 +67,6 @@
 		unsigned char post				: 1		;
 		unsigned char *post_ptr					;
 		unsigned char *post_ready_ptr			;
-//		#if USE_CAM
-//		unsigned char cam				: 2		;
-//		#endif //USE_CAM
 	};
 	
 	//Prototypen
