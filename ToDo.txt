@@ -1,0 +1,16 @@
+Todo:
+- Bezeichnungen für digitale Eingänge/Ausgänge dynamisch machen (Telnet)
+- S0 Schnittstelle
+    * Zähler an Interrupt koppeln
+    * Zähler modifizierbar/ablesbar
+- Webseite anpassen
+- 1-Wire Sensoren dynamisch anpassbar (eeprom)
+    * Namen der Sensoren
+- Regeln
+    * Regeln hinzufügen
+        + unzulässige Zeichen Filtern
+    * Regeln auslesen
+        + auserhalb der vorhandenen Regeln abbrechen         
+    * Regeln auswerten
+    * Regeln löschen
+    * Regeln ändern                    

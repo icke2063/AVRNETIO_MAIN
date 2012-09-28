@@ -1,0 +1,7 @@
+regeln array
+wenn
+elem_A (char[4])  E:1
+comp (char[1])    <,>,=,!
+elem_B (uint8_t) 0 - 255
+dann
+Actor (char) a-h bzw. A-H

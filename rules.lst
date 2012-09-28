@@ -1,0 +1,1170 @@
+   1               		.file	"rules.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 133               	.global	get_rule_count
+ 135               	get_rule_count:
+ 136               		.stabd	46,0,0
+   1:rules.c       **** /* ========================================================================== */
+   2:rules.c       **** /*                                                                            */
+   3:rules.c       **** /*   rules.c                                                                  */
+   4:rules.c       **** /*   (c) 2009 icke2063                                                        */
+   5:rules.c       **** /*                                                                            */
+   6:rules.c       **** /*   Description                                                              */
+   7:rules.c       **** /*                                                                            */
+   8:rules.c       **** /* ========================================================================== */
+   9:rules.c       **** 
+  10:rules.c       **** #include "rules.h"
+  11:rules.c       **** 
+  12:rules.c       **** uint8_t get_rule_count(void)
+  13:rules.c       **** {
+ 138               	.LM0:
+ 139               	.LFBB1:
+ 140               	/* prologue: function */
+ 141               	/* frame size = 0 */
+ 142               	.L2:
+  14:rules.c       ****     uint8_t count;
+  15:rules.c       ****     //aktuelle Anzahl auslesen
+  16:rules.c       ****     eeprom_busy_wait ();	
+ 144               	.LM1:
+ 145 0000 E199      		sbic 60-32,1
+ 146 0002 00C0      		rjmp .L2
+  17:rules.c       **** 		count = (uint8_t)eeprom_read_byte((unsigned char *)(RULES_EEPROM_STORE));
+ 148               	.LM2:
+ 149 0004 8FEF      		ldi r24,lo8(1023)
+ 150 0006 93E0      		ldi r25,hi8(1023)
+ 151 0008 0E94 0000 		call __eerd_byte_m32
+ 152               	/* epilogue start */
+  18:rules.c       **** 		//RULE_DEBUG("Rule count:%i\r\n\r\n",count);
+  19:rules.c       **** 		
+  20:rules.c       **** 		return count;
+  21:rules.c       **** }
+ 154               	.LM3:
+ 155 000c 0895      		ret
+ 157               	.Lscope1:
+ 159               		.stabd	78,0,0
+ 163               	.global	eeprom_get_rule
+ 165               	eeprom_get_rule:
+ 166               		.stabd	46,0,0
+  22:rules.c       **** 
+  23:rules.c       **** void init_rule(void)
+  24:rules.c       **** {
+  25:rules.c       ****     uint8_t count;
+  26:rules.c       ****     
+  27:rules.c       ****     RULE_DEBUG("\r\nInit Rules\r\n");
+  28:rules.c       ****     
+  29:rules.c       ****     //aktuelle Anzahl auslesen
+  30:rules.c       **** 		count = get_rule_count();
+  31:rules.c       ****     
+  32:rules.c       ****     if(count>MAX_RULES_COUNT) //fehlerhafte Anzahl berichtigen
+  33:rules.c       ****     {
+  34:rules.c       ****       //schreiben ins eeprom
+  35:rules.c       **** 			eeprom_busy_wait ();
+  36:rules.c       **** 			eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),0);
+  37:rules.c       **** 			
+  38:rules.c       **** 			usart_write("Rules counter set back to 0\r\n");
+  39:rules.c       ****     }		
+  40:rules.c       **** }
+  41:rules.c       **** 
+  42:rules.c       **** 
+  43:rules.c       **** uint8_t eeprom_add_rule (RULES_STRUCTUR* rule)
+  44:rules.c       **** {
+  45:rules.c       **** /*  add_rule
+  46:rules.c       **** * - freie Adresse suchen und Daten schreiben
+  47:rules.c       **** * - Daten verifizieren 
+  48:rules.c       **** *   1 -> alles OK Speicherstelle mit dem Anfang erh�hen
+  49:rules.c       **** *   0 -> ansonsten Fehlerausgabe
+  50:rules.c       **** *   
+  51:rules.c       **** */  
+  52:rules.c       ****     uint8_t count;
+  53:rules.c       ****     uint16_t target_adress;
+  54:rules.c       ****     
+  55:rules.c       ****     RULE_DEBUG("\r\nAdd Rules\r\n");
+  56:rules.c       ****     
+  57:rules.c       ****     //aktuelle Anzahl auslesen
+  58:rules.c       **** 		count = get_rule_count();
+  59:rules.c       ****     
+  60:rules.c       ****     if(count<MAX_RULES_COUNT)
+  61:rules.c       ****     {
+  62:rules.c       ****    
+  63:rules.c       ****       //Regel pruefen
+  64:rules.c       ****       
+  65:rules.c       ****       // Zieladresse berechnen
+  66:rules.c       ****       target_adress=RULES_EEPROM_STORE-(count*sizeof(RULES_STRUCTUR))-sizeof(RULES_STRUCTUR);
+  67:rules.c       ****       RULE_DEBUG("EEPROM write adress:%i\r\n",target_adress);
+  68:rules.c       ****       
+  69:rules.c       ****       // Regel in den EEPROM schreiben
+  70:rules.c       ****       eeprom_busy_wait ();
+  71:rules.c       ****       eeprom_write_block((unsigned char *)rule,(unsigned char *)target_adress,sizeof(RULES_STRUCTUR
+  72:rules.c       ****       
+  73:rules.c       ****   
+  74:rules.c       ****       //bisher alles OK -> neuen Wert ins EEPROM schreiben
+  75:rules.c       ****   		eeprom_busy_wait ();
+  76:rules.c       ****   		eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),++count);
+  77:rules.c       ****   		
+  78:rules.c       ****   		
+  79:rules.c       ****   		RULE_DEBUG("Regel(%i) hinzu: If ( %c%i %c %c%i ) then %c%i = %i \r\n",count,(*rule).elem_A,(*ru
+  80:rules.c       **** 
+  81:rules.c       ****     }
+  82:rules.c       ****     else
+  83:rules.c       ****       return 0;
+  84:rules.c       ****     
+  85:rules.c       ****     
+  86:rules.c       **** 		return 1;
+  87:rules.c       **** 
+  88:rules.c       **** 
+  89:rules.c       **** }
+  90:rules.c       **** 
+  91:rules.c       **** 
+  92:rules.c       **** uint8_t eeprom_get_rule (uint8_t pos, RULES_STRUCTUR *rule)
+  93:rules.c       **** {
+ 168               	.LM4:
+ 169               	.LFBB2:
+ 170 000e 1F93      		push r17
+ 171 0010 CF93      		push r28
+ 172 0012 DF93      		push r29
+ 173               	/* prologue: function */
+ 174               	/* frame size = 0 */
+ 175 0014 182F      		mov r17,r24
+ 176 0016 EB01      		movw r28,r22
+  94:rules.c       **** /*  get_rule
+  95:rules.c       **** *   
+  96:rules.c       **** */
+  97:rules.c       **** 
+  98:rules.c       ****   uint16_t target_adress;
+  99:rules.c       ****   uint8_t count;
+ 100:rules.c       ****   
+ 101:rules.c       ****   RULE_DEBUG("\r\nGet rule:%i\r\n",pos);
+ 102:rules.c       ****   
+ 103:rules.c       ****     //aktuelle Anzahl auslesen
+ 104:rules.c       **** 		count = get_rule_count();
+ 178               	.LM5:
+ 179 0018 0E94 0000 		call get_rule_count
+ 105:rules.c       ****   
+ 106:rules.c       ****   //Innerhalb vorhandener Regeln ?
+ 107:rules.c       ****   if(pos>0 && pos<=count)
+ 181               	.LM6:
+ 182 001c 1123      		tst r17
+ 183 001e 01F0      		breq .L6
+ 184 0020 8117      		cp r24,r17
+ 185 0022 00F0      		brlo .L6
+ 186               	.L10:
+ 108:rules.c       ****     {
+ 109:rules.c       ****       // Zieladresse berechnen
+ 110:rules.c       ****       target_adress=RULES_EEPROM_STORE-(pos*sizeof(RULES_STRUCTUR));
+ 111:rules.c       ****       RULE_DEBUG("EEPROM Read adress:%i\r\n",target_adress);
+ 112:rules.c       ****     
+ 113:rules.c       ****       
+ 114:rules.c       ****       // Regel aus Speicher auslesen
+ 115:rules.c       ****       eeprom_busy_wait ();
+ 188               	.LM7:
+ 189 0024 E199      		sbic 60-32,1
+ 190 0026 00C0      		rjmp .L10
+ 116:rules.c       ****       eeprom_read_block(rule,(unsigned char *)target_adress,sizeof(RULES_STRUCTUR));
+ 192               	.LM8:
+ 193 0028 812F      		mov r24,r17
+ 194 002a 90E0      		ldi r25,lo8(0)
+ 195 002c 23E0      		ldi r18,3
+ 196 002e 880F      	1:	lsl r24
+ 197 0030 991F      		rol r25
+ 198 0032 2A95      		dec r18
+ 199 0034 01F4      		brne 1b
+ 200 0036 6FEF      		ldi r22,lo8(1023)
+ 201 0038 73E0      		ldi r23,hi8(1023)
+ 202 003a 681B      		sub r22,r24
+ 203 003c 790B      		sbc r23,r25
+ 204 003e CE01      		movw r24,r28
+ 205 0040 48E0      		ldi r20,lo8(8)
+ 206 0042 50E0      		ldi r21,hi8(8)
+ 207 0044 0E94 0000 		call __eerd_block_m32
+ 208 0048 81E0      		ldi r24,lo8(1)
+ 209 004a 00C0      		rjmp .L8
+ 210               	.L6:
+ 117:rules.c       ****     }
+ 118:rules.c       ****   else
+ 119:rules.c       ****     {
+ 120:rules.c       ****       RULE_DEBUG("Failure: Out of Range\r\n");
+ 121:rules.c       ****       return 0; //Fehler
+ 122:rules.c       ****     
+ 123:rules.c       ****     }
+ 124:rules.c       ****   return 1;
+ 212               	.LM9:
+ 213 004c 80E0      		ldi r24,lo8(0)
+ 214               	.L8:
+ 215               	/* epilogue start */
+ 125:rules.c       ****   
+ 126:rules.c       **** }
+ 217               	.LM10:
+ 218 004e DF91      		pop r29
+ 219 0050 CF91      		pop r28
+ 220 0052 1F91      		pop r17
+ 221 0054 0895      		ret
+ 226               	.Lscope2:
+ 228               		.stabd	78,0,0
+ 231               	.global	eeprom_check_rule
+ 233               	eeprom_check_rule:
+ 234               		.stabd	46,0,0
+ 127:rules.c       **** 
+ 128:rules.c       **** 
+ 129:rules.c       **** uint8_t eeprom_del_rule (uint8_t pos)
+ 130:rules.c       **** {
+ 131:rules.c       **** /*  del_rule
+ 132:rules.c       **** *   
+ 133:rules.c       **** */  
+ 134:rules.c       ****   uint8_t count,i;
+ 135:rules.c       ****   uint16_t target_adress;
+ 136:rules.c       ****   RULES_STRUCTUR hilf;
+ 137:rules.c       ****   
+ 138:rules.c       ****   RULE_DEBUG("Del Rule:%i\r\n",pos);
+ 139:rules.c       ****   
+ 140:rules.c       ****   
+ 141:rules.c       ****   //aktuelle Anzahl auslesen
+ 142:rules.c       **** 	count = get_rule_count();
+ 143:rules.c       ****   
+ 144:rules.c       **** 
+ 145:rules.c       ****   if(pos>0 && pos<=count)
+ 146:rules.c       ****   {
+ 147:rules.c       ****     //folgende Regeln nachr�ckenen lassen
+ 148:rules.c       ****     for(i=pos;i<count;i++)
+ 149:rules.c       ****     {
+ 150:rules.c       ****       
+ 151:rules.c       ****       if(eeprom_get_rule(i+1,&hilf))
+ 152:rules.c       ****       {
+ 153:rules.c       ****           
+ 154:rules.c       ****         // Zieladresse berechnen
+ 155:rules.c       ****         target_adress=RULES_EEPROM_STORE-(i*sizeof(RULES_STRUCTUR));
+ 156:rules.c       ****         RULE_DEBUG("EEPROM write adress:%i\r\n",target_adress);
+ 157:rules.c       ****     
+ 158:rules.c       ****   
+ 159:rules.c       ****         // Regel in den EEPROM schreiben
+ 160:rules.c       ****         eeprom_busy_wait ();
+ 161:rules.c       ****         eeprom_write_block((unsigned char *)&hilf,(unsigned char *)target_adress,sizeof(RULES_STRUC
+ 162:rules.c       ****       }
+ 163:rules.c       ****       else
+ 164:rules.c       ****       {
+ 165:rules.c       ****         return 0;
+ 166:rules.c       ****       }
+ 167:rules.c       ****       
+ 168:rules.c       ****   
+ 169:rules.c       ****     }
+ 170:rules.c       ****   
+ 171:rules.c       ****     //bisher alles OK -> neuen Wert ins EEPROM schreiben
+ 172:rules.c       **** 		eeprom_busy_wait ();
+ 173:rules.c       **** 		eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),--count);
+ 174:rules.c       ****   
+ 175:rules.c       ****     return 1;
+ 176:rules.c       ****   }
+ 177:rules.c       ****   else
+ 178:rules.c       ****   {
+ 179:rules.c       ****     RULE_DEBUG("Failure: Out of Range\r\n");
+ 180:rules.c       ****     return 0;
+ 181:rules.c       ****   }
+ 182:rules.c       ****   
+ 183:rules.c       **** return 0;
+ 184:rules.c       ****   
+ 185:rules.c       **** }
+ 186:rules.c       **** 
+ 187:rules.c       **** 
+ 188:rules.c       **** uint8_t eeprom_check_rule (uint8_t pos)
+ 189:rules.c       **** {
+ 236               	.LM11:
+ 237               	.LFBB3:
+ 238 0056 DF92      		push r13
+ 239 0058 EF92      		push r14
+ 240 005a FF92      		push r15
+ 241 005c 0F93      		push r16
+ 242 005e 1F93      		push r17
+ 243 0060 DF93      		push r29
+ 244 0062 CF93      		push r28
+ 245 0064 CDB7      		in r28,__SP_L__
+ 246 0066 DEB7      		in r29,__SP_H__
+ 247 0068 2897      		sbiw r28,8
+ 248 006a 0FB6      		in __tmp_reg__,__SREG__
+ 249 006c F894      		cli
+ 250 006e DEBF      		out __SP_H__,r29
+ 251 0070 0FBE      		out __SREG__,__tmp_reg__
+ 252 0072 CDBF      		out __SP_L__,r28
+ 253               	/* prologue: function */
+ 254               	/* frame size = 8 */
+ 255 0074 182F      		mov r17,r24
+ 190:rules.c       ****     
+ 191:rules.c       ****   /*  check_rule
+ 192:rules.c       ****   *   
+ 193:rules.c       ****   */
+ 194:rules.c       ****   
+ 195:rules.c       ****   uint8_t count;
+ 196:rules.c       ****   RULES_STRUCTUR cur_rul;
+ 197:rules.c       ****   uint8_t elem_A,elem_B;
+ 198:rules.c       ****   
+ 199:rules.c       ****   unsigned char elem_X;
+ 200:rules.c       ****   uint8_t out_x,value_X,i;
+ 201:rules.c       ****   
+ 202:rules.c       ****   #if USE_OW
+ 203:rules.c       ****   extern volatile int16_t ow_array[MAXSENSORS];	
+ 204:rules.c       ****   #endif
+ 205:rules.c       ****   
+ 206:rules.c       ****   RULE_DEBUG("check rule:%i\r\n",pos);
+ 207:rules.c       ****   
+ 208:rules.c       ****   //aktuelle Anzahl auslesen
+ 209:rules.c       **** 	count = get_rule_count();
+ 257               	.LM12:
+ 258 0076 0E94 0000 		call get_rule_count
+ 210:rules.c       ****   
+ 211:rules.c       **** 
+ 212:rules.c       ****   if(pos>0 && pos<=count)
+ 260               	.LM13:
+ 261 007a 1123      		tst r17
+ 262 007c 01F4      		brne .+2
+ 263 007e 00C0      		rjmp .L13
+ 264 0080 8117      		cp r24,r17
+ 265 0082 00F4      		brsh .+2
+ 266 0084 00C0      		rjmp .L13
+ 213:rules.c       ****   {
+ 214:rules.c       **** 
+ 215:rules.c       ****     if(eeprom_get_rule(pos,&cur_rul))
+ 268               	.LM14:
+ 269 0086 812F      		mov r24,r17
+ 270 0088 BE01      		movw r22,r28
+ 271 008a 6F5F      		subi r22,lo8(-(1))
+ 272 008c 7F4F      		sbci r23,hi8(-(1))
+ 273 008e 0E94 0000 		call eeprom_get_rule
+ 274 0092 8823      		tst r24
+ 275 0094 01F4      		brne .+2
+ 276 0096 00C0      		rjmp .L13
+ 277 0098 10E0      		ldi r17,lo8(0)
+ 216:rules.c       ****     {
+ 217:rules.c       ****         
+ 218:rules.c       ****         
+ 219:rules.c       ****         for(i=0;i<2;i++)
+ 220:rules.c       ****         {
+ 221:rules.c       ****           if(i==0)
+ 222:rules.c       ****           {
+ 223:rules.c       ****             elem_X=cur_rul.elem_A;
+ 224:rules.c       ****             value_X=cur_rul.elem_A_ID;
+ 225:rules.c       ****           }
+ 226:rules.c       ****           else
+ 227:rules.c       ****           {
+ 228:rules.c       ****             elem_X=cur_rul.elem_B;
+ 229:rules.c       ****             value_X=cur_rul.elem_B_ID;
+ 230:rules.c       ****           }
+ 231:rules.c       ****         
+ 232:rules.c       ****           switch(elem_X){
+ 233:rules.c       ****             case 'A': //PortA
+ 234:rules.c       ****                       out_x=PINA&(1<<(int)value_X);
+ 235:rules.c       ****                       break;
+ 236:rules.c       ****             case 'B': //PortB
+ 237:rules.c       ****                       out_x=PINB&(1<<(int)value_X);
+ 238:rules.c       ****                       break;
+ 239:rules.c       ****             case 'C': //PortC
+ 240:rules.c       ****                       out_x=PINC&(1<<(int)value_X);
+ 279               	.LM15:
+ 280 009a 31E0      		ldi r19,lo8(1)
+ 281 009c E32E      		mov r14,r19
+ 282 009e F12C      		mov r15,__zero_reg__
+ 283               	.L26:
+ 221:rules.c       ****           if(i==0)
+ 285               	.LM16:
+ 286 00a0 1123      		tst r17
+ 287 00a2 01F4      		brne .L14
+ 223:rules.c       ****             elem_X=cur_rul.elem_A;
+ 289               	.LM17:
+ 290 00a4 9981      		ldd r25,Y+1
+ 224:rules.c       ****             value_X=cur_rul.elem_A_ID;
+ 292               	.LM18:
+ 293 00a6 8A81      		ldd r24,Y+2
+ 294 00a8 00C0      		rjmp .L15
+ 295               	.L14:
+ 228:rules.c       ****             elem_X=cur_rul.elem_B;
+ 297               	.LM19:
+ 298 00aa 9C81      		ldd r25,Y+4
+ 229:rules.c       ****             value_X=cur_rul.elem_B_ID;
+ 300               	.LM20:
+ 301 00ac 8D81      		ldd r24,Y+5
+ 302               	.L15:
+ 232:rules.c       ****           switch(elem_X){
+ 304               	.LM21:
+ 305 00ae 9334      		cpi r25,lo8(67)
+ 306 00b0 01F0      		breq .L19
+ 307 00b2 9434      		cpi r25,lo8(68)
+ 308 00b4 00F4      		brsh .L23
+ 309 00b6 9134      		cpi r25,lo8(65)
+ 310 00b8 01F0      		breq .L17
+ 311 00ba 9234      		cpi r25,lo8(66)
+ 312 00bc 01F4      		brne .L16
+ 313 00be 00C0      		rjmp .L48
+ 314               	.L23:
+ 315 00c0 9C34      		cpi r25,lo8(76)
+ 316 00c2 01F0      		breq .L21
+ 317 00c4 9335      		cpi r25,lo8(83)
+ 318 00c6 01F0      		breq .L43
+ 319 00c8 9434      		cpi r25,lo8(68)
+ 320 00ca 01F4      		brne .L16
+ 321 00cc 00C0      		rjmp .L49
+ 322               	.L17:
+ 234:rules.c       ****                       out_x=PINA&(1<<(int)value_X);
+ 324               	.LM22:
+ 325 00ce 29B3      		in r18,57-32
+ 326 00d0 00C0      		rjmp .L44
+ 327               	.L48:
+ 237:rules.c       ****                       out_x=PINB&(1<<(int)value_X);
+ 329               	.LM23:
+ 330 00d2 26B3      		in r18,54-32
+ 331 00d4 00C0      		rjmp .L44
+ 332               	.L19:
+ 334               	.LM24:
+ 335 00d6 23B3      		in r18,51-32
+ 336 00d8 00C0      		rjmp .L44
+ 337               	.L49:
+ 241:rules.c       ****                       break;
+ 242:rules.c       ****             case 'D': //PortD
+ 243:rules.c       ****                       out_x=PIND&(1<<(int)value_X);
+ 339               	.LM25:
+ 340 00da 20B3      		in r18,48-32
+ 341               	.L44:
+ 342 00dc A701      		movw r20,r14
+ 343 00de 00C0      		rjmp 2f
+ 344 00e0 440F      	1:	lsl r20
+ 345 00e2 551F      		rol r21
+ 346 00e4 8A95      	2:	dec r24
+ 347 00e6 02F4      		brpl 1b
+ 348 00e8 2423      		and r18,r20
+ 349 00ea 00C0      		rjmp .L16
+ 350               	.L21:
+ 244:rules.c       ****                       break;
+ 245:rules.c       ****             case 'S': //static value
+ 246:rules.c       ****                       out_x=value_X;
+ 247:rules.c       ****                       break;
+ 248:rules.c       ****             #if USE_OW
+ 249:rules.c       ****             case 'T': //Temperatursensor
+ 250:rules.c       ****                       out_x=(uint8_t)(ow_array[value_X]/10);
+ 251:rules.c       ****                       break;
+ 252:rules.c       ****             #endif
+ 253:rules.c       ****             case 'L': //vorhandene Logik abfragen
+ 254:rules.c       ****                       out_x=eeprom_check_rule(value_X);
+ 352               	.LM26:
+ 353 00ec 0E94 0000 		call eeprom_check_rule
+ 354               	.L43:
+ 355 00f0 282F      		mov r18,r24
+ 356               	.L16:
+ 255:rules.c       ****                       break;
+ 256:rules.c       ****             default:;
+ 257:rules.c       ****             }
+ 258:rules.c       ****             
+ 259:rules.c       ****           if(i==0)
+ 358               	.LM27:
+ 359 00f2 1123      		tst r17
+ 360 00f4 01F0      		breq .L24
+ 361 00f6 022F      		mov r16,r18
+ 362 00f8 00C0      		rjmp .L25
+ 363               	.L24:
+ 364 00fa D22E      		mov r13,r18
+ 365               	.L25:
+ 219:rules.c       ****         for(i=0;i<2;i++)
+ 367               	.LM28:
+ 368 00fc 1F5F      		subi r17,lo8(-(1))
+ 369 00fe 1230      		cpi r17,lo8(2)
+ 370 0100 01F4      		brne .L26
+ 260:rules.c       ****           {
+ 261:rules.c       ****             elem_A=out_x;
+ 262:rules.c       ****           }
+ 263:rules.c       ****           else
+ 264:rules.c       ****           {
+ 265:rules.c       ****             elem_B=out_x;
+ 266:rules.c       ****           }
+ 267:rules.c       ****           
+ 268:rules.c       ****         }
+ 269:rules.c       ****         
+ 270:rules.c       ****         RULE_DEBUG("Element A: %i\r\n",elem_A);
+ 271:rules.c       ****         RULE_DEBUG("Element B: %i\r\n",elem_B);
+ 272:rules.c       ****         RULE_DEBUG("Compare: %c\r\n",cur_rul.comp);
+ 273:rules.c       **** 
+ 274:rules.c       ****             
+ 275:rules.c       ****         switch(cur_rul.comp){
+ 372               	.LM29:
+ 373 0102 8B81      		ldd r24,Y+3
+ 374 0104 8C33      		cpi r24,lo8(60)
+ 375 0106 01F0      		breq .L29
+ 376 0108 8D33      		cpi r24,lo8(61)
+ 377 010a 00F4      		brsh .L33
+ 378 010c 8132      		cpi r24,lo8(33)
+ 379 010e 01F0      		breq .L27
+ 380 0110 8632      		cpi r24,lo8(38)
+ 381 0112 01F4      		brne .L13
+ 382 0114 00C0      		rjmp .L50
+ 383               	.L33:
+ 384 0116 8E33      		cpi r24,lo8(62)
+ 385 0118 01F0      		breq .L31
+ 386 011a 8E33      		cpi r24,lo8(62)
+ 387 011c 00F0      		brlo .L30
+ 388 011e 8C37      		cpi r24,lo8(124)
+ 389 0120 01F4      		brne .L13
+ 390 0122 00C0      		rjmp .L51
+ 391               	.L29:
+ 392 0124 80E0      		ldi r24,lo8(0)
+ 393 0126 D016      		cp r13,r16
+ 394 0128 00F4      		brsh .L35
+ 395 012a 00C0      		rjmp .L46
+ 396               	.L31:
+ 397 012c 80E0      		ldi r24,lo8(0)
+ 398 012e 0D15      		cp r16,r13
+ 399 0130 00F4      		brsh .L35
+ 400 0132 00C0      		rjmp .L46
+ 401               	.L30:
+ 402 0134 80E0      		ldi r24,lo8(0)
+ 403 0136 D016      		cp r13,r16
+ 404 0138 01F4      		brne .L35
+ 405 013a 00C0      		rjmp .L46
+ 406               	.L27:
+ 407 013c 80E0      		ldi r24,lo8(0)
+ 408 013e D016      		cp r13,r16
+ 409 0140 01F4      		brne .L46
+ 410 0142 00C0      		rjmp .L35
+ 411               	.L50:
+ 412 0144 802F      		mov r24,r16
+ 413 0146 8D21      		and r24,r13
+ 414 0148 00C0      		rjmp .L47
+ 415               	.L51:
+ 416 014a 802F      		mov r24,r16
+ 417 014c 8D29      		or r24,r13
+ 418               	.L47:
+ 419 014e 8823      		tst r24
+ 420 0150 01F0      		breq .L35
+ 421               	.L46:
+ 422 0152 81E0      		ldi r24,lo8(1)
+ 423 0154 00C0      		rjmp .L35
+ 424               	.L13:
+ 425 0156 80E0      		ldi r24,lo8(0)
+ 426               	.L35:
+ 427               	/* epilogue start */
+ 276:rules.c       ****         case '<':if(elem_A < elem_B)return 1;else return 0;break;
+ 277:rules.c       ****         case '>':if(elem_A > elem_B)return 1;else return 0;break;
+ 278:rules.c       ****         case '=':if(elem_A == elem_B)return 1;else return 0;break;
+ 279:rules.c       ****         case '!':if(elem_A != elem_B)return 1;else return 0;break;
+ 280:rules.c       ****         case '&':if(elem_A & elem_B)return 1;else return 0;break;
+ 281:rules.c       ****         case '|':if(elem_A | elem_B)return 1;else return 0;break;
+ 282:rules.c       ****         
+ 283:rules.c       ****         default:;
+ 284:rules.c       ****         }
+ 285:rules.c       ****     }
+ 286:rules.c       ****     
+ 287:rules.c       ****   }
+ 288:rules.c       ****     else
+ 289:rules.c       ****   {
+ 290:rules.c       ****     RULE_DEBUG("Failure: Out of Range\r\n");
+ 291:rules.c       ****     return 0;
+ 292:rules.c       ****   }
+ 293:rules.c       ****     
+ 294:rules.c       ****     return 0;   
+ 295:rules.c       **** }
+ 429               	.LM30:
+ 430 0158 2896      		adiw r28,8
+ 431 015a 0FB6      		in __tmp_reg__,__SREG__
+ 432 015c F894      		cli
+ 433 015e DEBF      		out __SP_H__,r29
+ 434 0160 0FBE      		out __SREG__,__tmp_reg__
+ 435 0162 CDBF      		out __SP_L__,r28
+ 436 0164 CF91      		pop r28
+ 437 0166 DF91      		pop r29
+ 438 0168 1F91      		pop r17
+ 439 016a 0F91      		pop r16
+ 440 016c FF90      		pop r15
+ 441 016e EF90      		pop r14
+ 442 0170 DF90      		pop r13
+ 443 0172 0895      		ret
+ 455               	.Lscope3:
+ 457               		.stabd	78,0,0
+ 460               	.global	eeprom_run_rule
+ 462               	eeprom_run_rule:
+ 463               		.stabd	46,0,0
+ 296:rules.c       **** 
+ 297:rules.c       **** 
+ 298:rules.c       **** 
+ 299:rules.c       **** uint8_t eeprom_run_rule(uint8_t pos)
+ 300:rules.c       **** {
+ 465               	.LM31:
+ 466               	.LFBB4:
+ 467 0174 1F93      		push r17
+ 468 0176 DF93      		push r29
+ 469 0178 CF93      		push r28
+ 470 017a CDB7      		in r28,__SP_L__
+ 471 017c DEB7      		in r29,__SP_H__
+ 472 017e 2897      		sbiw r28,8
+ 473 0180 0FB6      		in __tmp_reg__,__SREG__
+ 474 0182 F894      		cli
+ 475 0184 DEBF      		out __SP_H__,r29
+ 476 0186 0FBE      		out __SREG__,__tmp_reg__
+ 477 0188 CDBF      		out __SP_L__,r28
+ 478               	/* prologue: function */
+ 479               	/* frame size = 8 */
+ 480 018a 182F      		mov r17,r24
+ 301:rules.c       **** RULES_STRUCTUR cur_rul;
+ 302:rules.c       **** 
+ 303:rules.c       ****   if(eeprom_check_rule(pos))
+ 482               	.LM32:
+ 483 018c 0E94 0000 		call eeprom_check_rule
+ 484 0190 8823      		tst r24
+ 485 0192 01F4      		brne .+2
+ 486 0194 00C0      		rjmp .L53
+ 304:rules.c       ****   {
+ 305:rules.c       ****     if(eeprom_get_rule(pos,&cur_rul))
+ 488               	.LM33:
+ 489 0196 812F      		mov r24,r17
+ 490 0198 BE01      		movw r22,r28
+ 491 019a 6F5F      		subi r22,lo8(-(1))
+ 492 019c 7F4F      		sbci r23,hi8(-(1))
+ 493 019e 0E94 0000 		call eeprom_get_rule
+ 494 01a2 8823      		tst r24
+ 495 01a4 01F4      		brne .+2
+ 496 01a6 00C0      		rjmp .L53
+ 306:rules.c       ****     {
+ 307:rules.c       ****       switch(cur_rul.actor)
+ 498               	.LM34:
+ 499 01a8 8E81      		ldd r24,Y+6
+ 500 01aa 8234      		cpi r24,lo8(66)
+ 501 01ac 01F0      		breq .L55
+ 502 01ae 8334      		cpi r24,lo8(67)
+ 503 01b0 00F4      		brsh .L58
+ 504 01b2 8134      		cpi r24,lo8(65)
+ 505 01b4 01F0      		breq .+2
+ 506 01b6 00C0      		rjmp .L53
+ 507 01b8 00C0      		rjmp .L70
+ 508               	.L58:
+ 509 01ba 8334      		cpi r24,lo8(67)
+ 510 01bc 01F4      		brne .+2
+ 511 01be 00C0      		rjmp .L56
+ 512 01c0 8434      		cpi r24,lo8(68)
+ 513 01c2 01F0      		breq .+2
+ 514 01c4 00C0      		rjmp .L53
+ 515 01c6 00C0      		rjmp .L71
+ 516               	.L70:
+ 308:rules.c       ****       {
+ 309:rules.c       ****           case 'A': //PortA
+ 310:rules.c       ****                     if (cur_rul.act_value == 1)
+ 518               	.LM35:
+ 519 01c8 8885      		ldd r24,Y+8
+ 520 01ca 8130      		cpi r24,lo8(1)
+ 521 01cc 01F4      		brne .L59
+ 311:rules.c       ****                       PORTA = PORTA |= (1<<cur_rul.act_ID); 	//  setzt Bit  in PORT und setzt damit
+ 523               	.LM36:
+ 524 01ce 8BB3      		in r24,59-32
+ 525 01d0 21E0      		ldi r18,lo8(1)
+ 526 01d2 30E0      		ldi r19,hi8(1)
+ 527 01d4 0F80      		ldd r0,Y+7
+ 528 01d6 00C0      		rjmp 2f
+ 529 01d8 220F      	1:	lsl r18
+ 530 01da 331F      		rol r19
+ 531 01dc 0A94      	2:	dec r0
+ 532 01de 02F4      		brpl 1b
+ 533 01e0 822B      		or r24,r18
+ 534 01e2 8BBB      		out 59-32,r24
+ 535 01e4 00C0      		rjmp .L67
+ 536               	.L59:
+ 312:rules.c       ****                     else if (cur_rul.act_value == 0)
+ 538               	.LM37:
+ 539 01e6 8823      		tst r24
+ 540 01e8 01F0      		breq .+2
+ 541 01ea 00C0      		rjmp .L61
+ 313:rules.c       ****                       PORTA = PORTA &= ~(1<<cur_rul.act_ID);
+ 543               	.LM38:
+ 544 01ec 8BB3      		in r24,59-32
+ 545 01ee 21E0      		ldi r18,lo8(1)
+ 546 01f0 30E0      		ldi r19,hi8(1)
+ 547 01f2 0F80      		ldd r0,Y+7
+ 548 01f4 00C0      		rjmp 2f
+ 549 01f6 220F      	1:	lsl r18
+ 550 01f8 331F      		rol r19
+ 551 01fa 0A94      	2:	dec r0
+ 552 01fc 02F4      		brpl 1b
+ 553 01fe 2095      		com r18
+ 554 0200 2823      		and r18,r24
+ 555 0202 2BBB      		out 59-32,r18
+ 556               	.L67:
+ 557 0204 8BB3      		in r24,59-32
+ 558 0206 8BBB      		out 59-32,r24
+ 559 0208 00C0      		rjmp .L61
+ 560               	.L55:
+ 314:rules.c       ****                     return 1;
+ 315:rules.c       ****                     break;
+ 316:rules.c       ****           case 'B': //PortB
+ 317:rules.c       ****                     if (cur_rul.act_value == 1)
+ 562               	.LM39:
+ 563 020a 8885      		ldd r24,Y+8
+ 564 020c 8130      		cpi r24,lo8(1)
+ 565 020e 01F4      		brne .L62
+ 318:rules.c       ****                       PORTB = PORTB |= (1<<cur_rul.act_ID); 	//  setzt Bit  in PORT und setzt damit
+ 567               	.LM40:
+ 568 0210 88B3      		in r24,56-32
+ 569 0212 21E0      		ldi r18,lo8(1)
+ 570 0214 30E0      		ldi r19,hi8(1)
+ 571 0216 0F80      		ldd r0,Y+7
+ 572 0218 00C0      		rjmp 2f
+ 573 021a 220F      	1:	lsl r18
+ 574 021c 331F      		rol r19
+ 575 021e 0A94      	2:	dec r0
+ 576 0220 02F4      		brpl 1b
+ 577 0222 822B      		or r24,r18
+ 578 0224 88BB      		out 56-32,r24
+ 579 0226 00C0      		rjmp .L69
+ 580               	.L62:
+ 319:rules.c       ****                     else if (cur_rul.act_value == 0)
+ 582               	.LM41:
+ 583 0228 8823      		tst r24
+ 584 022a 01F0      		breq .+2
+ 585 022c 00C0      		rjmp .L61
+ 320:rules.c       ****                       PORTB = PORTB &= ~(1<<cur_rul.act_ID);
+ 587               	.LM42:
+ 588 022e 88B3      		in r24,56-32
+ 589 0230 21E0      		ldi r18,lo8(1)
+ 590 0232 30E0      		ldi r19,hi8(1)
+ 591 0234 0F80      		ldd r0,Y+7
+ 592 0236 00C0      		rjmp 2f
+ 593 0238 220F      	1:	lsl r18
+ 594 023a 331F      		rol r19
+ 595 023c 0A94      	2:	dec r0
+ 596 023e 02F4      		brpl 1b
+ 597 0240 2095      		com r18
+ 598 0242 2823      		and r18,r24
+ 599 0244 28BB      		out 56-32,r18
+ 600               	.L69:
+ 601 0246 88B3      		in r24,56-32
+ 602 0248 88BB      		out 56-32,r24
+ 603 024a 00C0      		rjmp .L61
+ 604               	.L56:
+ 321:rules.c       ****                     return 1;
+ 322:rules.c       ****                     break;
+ 323:rules.c       ****           case 'C': //PortC
+ 324:rules.c       ****                     if (cur_rul.act_value == 1)
+ 606               	.LM43:
+ 607 024c 8885      		ldd r24,Y+8
+ 608 024e 8130      		cpi r24,lo8(1)
+ 609 0250 01F4      		brne .L63
+ 325:rules.c       ****                       PORTC = PORTC |= (1<<cur_rul.act_ID); 	//  setzt Bit  in PORT und setzt damit
+ 611               	.LM44:
+ 612 0252 85B3      		in r24,53-32
+ 613 0254 21E0      		ldi r18,lo8(1)
+ 614 0256 30E0      		ldi r19,hi8(1)
+ 615 0258 0F80      		ldd r0,Y+7
+ 616 025a 00C0      		rjmp 2f
+ 617 025c 220F      	1:	lsl r18
+ 618 025e 331F      		rol r19
+ 619 0260 0A94      	2:	dec r0
+ 620 0262 02F4      		brpl 1b
+ 621 0264 822B      		or r24,r18
+ 622 0266 85BB      		out 53-32,r24
+ 623 0268 00C0      		rjmp .L68
+ 624               	.L63:
+ 326:rules.c       ****                     else if (cur_rul.act_value == 0)
+ 626               	.LM45:
+ 627 026a 8823      		tst r24
+ 628 026c 01F4      		brne .L61
+ 327:rules.c       ****                       PORTC = PORTC &= ~(1<<cur_rul.act_ID);
+ 630               	.LM46:
+ 631 026e 85B3      		in r24,53-32
+ 632 0270 21E0      		ldi r18,lo8(1)
+ 633 0272 30E0      		ldi r19,hi8(1)
+ 634 0274 0F80      		ldd r0,Y+7
+ 635 0276 00C0      		rjmp 2f
+ 636 0278 220F      	1:	lsl r18
+ 637 027a 331F      		rol r19
+ 638 027c 0A94      	2:	dec r0
+ 639 027e 02F4      		brpl 1b
+ 640 0280 2095      		com r18
+ 641 0282 2823      		and r18,r24
+ 642 0284 25BB      		out 53-32,r18
+ 643               	.L68:
+ 644 0286 85B3      		in r24,53-32
+ 645 0288 85BB      		out 53-32,r24
+ 646 028a 00C0      		rjmp .L61
+ 647               	.L71:
+ 328:rules.c       ****                     return 1;
+ 329:rules.c       ****                     break;
+ 330:rules.c       ****           case 'D': //PortD
+ 331:rules.c       ****                     if (cur_rul.act_value == 1)
+ 649               	.LM47:
+ 650 028c 8885      		ldd r24,Y+8
+ 651 028e 8130      		cpi r24,lo8(1)
+ 652 0290 01F4      		brne .L64
+ 332:rules.c       ****                       PORTD = PORTD |= (1<<cur_rul.act_ID); 	//  setzt Bit  in PORT und setzt damit
+ 654               	.LM48:
+ 655 0292 82B3      		in r24,50-32
+ 656 0294 21E0      		ldi r18,lo8(1)
+ 657 0296 30E0      		ldi r19,hi8(1)
+ 658 0298 0F80      		ldd r0,Y+7
+ 659 029a 00C0      		rjmp 2f
+ 660 029c 220F      	1:	lsl r18
+ 661 029e 331F      		rol r19
+ 662 02a0 0A94      	2:	dec r0
+ 663 02a2 02F4      		brpl 1b
+ 664 02a4 822B      		or r24,r18
+ 665 02a6 82BB      		out 50-32,r24
+ 666 02a8 00C0      		rjmp .L66
+ 667               	.L64:
+ 333:rules.c       ****                     else if (cur_rul.act_value == 0)
+ 669               	.LM49:
+ 670 02aa 8823      		tst r24
+ 671 02ac 01F4      		brne .L61
+ 334:rules.c       ****                       PORTD = PORTD &= ~(1<<cur_rul.act_ID);
+ 673               	.LM50:
+ 674 02ae 82B3      		in r24,50-32
+ 675 02b0 21E0      		ldi r18,lo8(1)
+ 676 02b2 30E0      		ldi r19,hi8(1)
+ 677 02b4 0F80      		ldd r0,Y+7
+ 678 02b6 00C0      		rjmp 2f
+ 679 02b8 220F      	1:	lsl r18
+ 680 02ba 331F      		rol r19
+ 681 02bc 0A94      	2:	dec r0
+ 682 02be 02F4      		brpl 1b
+ 683 02c0 2095      		com r18
+ 684 02c2 2823      		and r18,r24
+ 685 02c4 22BB      		out 50-32,r18
+ 686               	.L66:
+ 687 02c6 82B3      		in r24,50-32
+ 688 02c8 82BB      		out 50-32,r24
+ 689               	.L61:
+ 690 02ca 81E0      		ldi r24,lo8(1)
+ 691 02cc 00C0      		rjmp .L60
+ 692               	.L53:
+ 693 02ce 80E0      		ldi r24,lo8(0)
+ 694               	.L60:
+ 695               	/* epilogue start */
+ 335:rules.c       ****                     return 1;
+ 336:rules.c       ****                     break;
+ 337:rules.c       ****           default:;
+ 338:rules.c       ****       }
+ 339:rules.c       ****     }
+ 340:rules.c       ****   }
+ 341:rules.c       ****   
+ 342:rules.c       **** return 0;
+ 343:rules.c       **** 
+ 344:rules.c       **** }
+ 697               	.LM51:
+ 698 02d0 2896      		adiw r28,8
+ 699 02d2 0FB6      		in __tmp_reg__,__SREG__
+ 700 02d4 F894      		cli
+ 701 02d6 DEBF      		out __SP_H__,r29
+ 702 02d8 0FBE      		out __SREG__,__tmp_reg__
+ 703 02da CDBF      		out __SP_L__,r28
+ 704 02dc CF91      		pop r28
+ 705 02de DF91      		pop r29
+ 706 02e0 1F91      		pop r17
+ 707 02e2 0895      		ret
+ 712               	.Lscope4:
+ 714               		.stabd	78,0,0
+ 717               	.global	eeprom_del_rule
+ 719               	eeprom_del_rule:
+ 720               		.stabd	46,0,0
+ 130:rules.c       **** {
+ 722               	.LM52:
+ 723               	.LFBB5:
+ 724 02e4 AF92      		push r10
+ 725 02e6 BF92      		push r11
+ 726 02e8 CF92      		push r12
+ 727 02ea DF92      		push r13
+ 728 02ec FF92      		push r15
+ 729 02ee 0F93      		push r16
+ 730 02f0 1F93      		push r17
+ 731 02f2 DF93      		push r29
+ 732 02f4 CF93      		push r28
+ 733 02f6 CDB7      		in r28,__SP_L__
+ 734 02f8 DEB7      		in r29,__SP_H__
+ 735 02fa 2897      		sbiw r28,8
+ 736 02fc 0FB6      		in __tmp_reg__,__SREG__
+ 737 02fe F894      		cli
+ 738 0300 DEBF      		out __SP_H__,r29
+ 739 0302 0FBE      		out __SREG__,__tmp_reg__
+ 740 0304 CDBF      		out __SP_L__,r28
+ 741               	/* prologue: function */
+ 742               	/* frame size = 8 */
+ 743 0306 182F      		mov r17,r24
+ 142:rules.c       **** 	count = get_rule_count();
+ 745               	.LM53:
+ 746 0308 0E94 0000 		call get_rule_count
+ 747 030c 082F      		mov r16,r24
+ 145:rules.c       ****   if(pos>0 && pos<=count)
+ 749               	.LM54:
+ 750 030e 1123      		tst r17
+ 751 0310 01F0      		breq .L73
+ 752 0312 8117      		cp r24,r17
+ 753 0314 00F0      		brlo .L73
+ 151:rules.c       ****       if(eeprom_get_rule(i+1,&hilf))
+ 755               	.LM55:
+ 756 0316 6E01      		movw r12,r28
+ 757 0318 0894      		sec
+ 758 031a C11C      		adc r12,__zero_reg__
+ 759 031c D11C      		adc r13,__zero_reg__
+ 161:rules.c       ****         eeprom_write_block((unsigned char *)&hilf,(unsigned char *)target_adress,sizeof(RULES_STRUC
+ 761               	.LM56:
+ 762 031e 5FEF      		ldi r21,lo8(1023)
+ 763 0320 A52E      		mov r10,r21
+ 764 0322 53E0      		ldi r21,hi8(1023)
+ 765 0324 B52E      		mov r11,r21
+ 766 0326 00C0      		rjmp .L74
+ 767               	.L76:
+ 151:rules.c       ****       if(eeprom_get_rule(i+1,&hilf))
+ 769               	.LM57:
+ 770 0328 F12E      		mov r15,r17
+ 771 032a F394      		inc r15
+ 772 032c 8F2D      		mov r24,r15
+ 773 032e B601      		movw r22,r12
+ 774 0330 0E94 0000 		call eeprom_get_rule
+ 775 0334 8823      		tst r24
+ 776 0336 01F0      		breq .L73
+ 777               	.L81:
+ 160:rules.c       ****         eeprom_busy_wait ();
+ 779               	.LM58:
+ 780 0338 E199      		sbic 60-32,1
+ 781 033a 00C0      		rjmp .L81
+ 161:rules.c       ****         eeprom_write_block((unsigned char *)&hilf,(unsigned char *)target_adress,sizeof(RULES_STRUC
+ 783               	.LM59:
+ 784 033c 812F      		mov r24,r17
+ 785 033e 90E0      		ldi r25,lo8(0)
+ 786 0340 43E0      		ldi r20,3
+ 787 0342 880F      	1:	lsl r24
+ 788 0344 991F      		rol r25
+ 789 0346 4A95      		dec r20
+ 790 0348 01F4      		brne 1b
+ 791 034a B501      		movw r22,r10
+ 792 034c 681B      		sub r22,r24
+ 793 034e 790B      		sbc r23,r25
+ 794 0350 C601      		movw r24,r12
+ 795 0352 48E0      		ldi r20,lo8(8)
+ 796 0354 50E0      		ldi r21,hi8(8)
+ 797 0356 0E94 0000 		call __eewr_block_m32
+ 798 035a 1F2D      		mov r17,r15
+ 799               	.L74:
+ 148:rules.c       ****     for(i=pos;i<count;i++)
+ 801               	.LM60:
+ 802 035c 1017      		cp r17,r16
+ 803 035e 00F0      		brlo .L76
+ 804               	.L80:
+ 172:rules.c       **** 		eeprom_busy_wait ();
+ 806               	.LM61:
+ 807 0360 E199      		sbic 60-32,1
+ 808 0362 00C0      		rjmp .L80
+ 173:rules.c       **** 		eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),--count);
+ 810               	.LM62:
+ 811 0364 0150      		subi r16,lo8(-(-1))
+ 812 0366 8FEF      		ldi r24,lo8(1023)
+ 813 0368 93E0      		ldi r25,hi8(1023)
+ 814 036a 602F      		mov r22,r16
+ 815 036c 0E94 0000 		call __eewr_byte_m32
+ 816 0370 81E0      		ldi r24,lo8(1)
+ 817 0372 00C0      		rjmp .L78
+ 818               	.L73:
+ 175:rules.c       ****     return 1;
+ 820               	.LM63:
+ 821 0374 80E0      		ldi r24,lo8(0)
+ 822               	.L78:
+ 823               	/* epilogue start */
+ 185:rules.c       **** }
+ 825               	.LM64:
+ 826 0376 2896      		adiw r28,8
+ 827 0378 0FB6      		in __tmp_reg__,__SREG__
+ 828 037a F894      		cli
+ 829 037c DEBF      		out __SP_H__,r29
+ 830 037e 0FBE      		out __SREG__,__tmp_reg__
+ 831 0380 CDBF      		out __SP_L__,r28
+ 832 0382 CF91      		pop r28
+ 833 0384 DF91      		pop r29
+ 834 0386 1F91      		pop r17
+ 835 0388 0F91      		pop r16
+ 836 038a FF90      		pop r15
+ 837 038c DF90      		pop r13
+ 838 038e CF90      		pop r12
+ 839 0390 BF90      		pop r11
+ 840 0392 AF90      		pop r10
+ 841 0394 0895      		ret
+ 848               	.Lscope5:
+ 850               		.stabd	78,0,0
+ 853               	.global	eeprom_add_rule
+ 855               	eeprom_add_rule:
+ 856               		.stabd	46,0,0
+  44:rules.c       **** {
+ 858               	.LM65:
+ 859               	.LFBB6:
+ 860 0396 1F93      		push r17
+ 861 0398 CF93      		push r28
+ 862 039a DF93      		push r29
+ 863               	/* prologue: function */
+ 864               	/* frame size = 0 */
+ 865 039c EC01      		movw r28,r24
+  58:rules.c       **** 		count = get_rule_count();
+ 867               	.LM66:
+ 868 039e 0E94 0000 		call get_rule_count
+ 869 03a2 182F      		mov r17,r24
+  60:rules.c       ****     if(count<MAX_RULES_COUNT)
+ 871               	.LM67:
+ 872 03a4 8436      		cpi r24,lo8(100)
+ 873 03a6 00F0      		brlo .L89
+ 874 03a8 80E0      		ldi r24,lo8(0)
+ 875 03aa 00C0      		rjmp .L86
+ 876               	.L89:
+  70:rules.c       ****       eeprom_busy_wait ();
+ 878               	.LM68:
+ 879 03ac E199      		sbic 60-32,1
+ 880 03ae 00C0      		rjmp .L89
+  71:rules.c       ****       eeprom_write_block((unsigned char *)rule,(unsigned char *)target_adress,sizeof(RULES_STRUCTUR
+ 882               	.LM69:
+ 883 03b0 812F      		mov r24,r17
+ 884 03b2 90E0      		ldi r25,lo8(0)
+ 885 03b4 63E0      		ldi r22,3
+ 886 03b6 880F      	1:	lsl r24
+ 887 03b8 991F      		rol r25
+ 888 03ba 6A95      		dec r22
+ 889 03bc 01F4      		brne 1b
+ 890 03be 67EF      		ldi r22,lo8(1015)
+ 891 03c0 73E0      		ldi r23,hi8(1015)
+ 892 03c2 681B      		sub r22,r24
+ 893 03c4 790B      		sbc r23,r25
+ 894 03c6 CE01      		movw r24,r28
+ 895 03c8 48E0      		ldi r20,lo8(8)
+ 896 03ca 50E0      		ldi r21,hi8(8)
+ 897 03cc 0E94 0000 		call __eewr_block_m32
+ 898               	.L87:
+  75:rules.c       ****   		eeprom_busy_wait ();
+ 900               	.LM70:
+ 901 03d0 E199      		sbic 60-32,1
+ 902 03d2 00C0      		rjmp .L87
+  76:rules.c       ****   		eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),++count);
+ 904               	.LM71:
+ 905 03d4 1F5F      		subi r17,lo8(-(1))
+ 906 03d6 8FEF      		ldi r24,lo8(1023)
+ 907 03d8 93E0      		ldi r25,hi8(1023)
+ 908 03da 612F      		mov r22,r17
+ 909 03dc 0E94 0000 		call __eewr_byte_m32
+ 910 03e0 81E0      		ldi r24,lo8(1)
+ 911               	.L86:
+ 912               	/* epilogue start */
+  89:rules.c       **** }
+ 914               	.LM72:
+ 915 03e2 DF91      		pop r29
+ 916 03e4 CF91      		pop r28
+ 917 03e6 1F91      		pop r17
+ 918 03e8 0895      		ret
+ 923               	.Lscope6:
+ 925               		.stabd	78,0,0
+ 927               	.global	init_rule
+ 929               	init_rule:
+ 930               		.stabd	46,0,0
+  24:rules.c       **** {
+ 932               	.LM73:
+ 933               	.LFBB7:
+ 934               	/* prologue: function */
+ 935               	/* frame size = 0 */
+  30:rules.c       **** 		count = get_rule_count();
+ 937               	.LM74:
+ 938 03ea 0E94 0000 		call get_rule_count
+  32:rules.c       ****     if(count>MAX_RULES_COUNT) //fehlerhafte Anzahl berichtigen
+ 940               	.LM75:
+ 941 03ee 8536      		cpi r24,lo8(101)
+ 942 03f0 00F0      		brlo .L95
+ 943               	.L96:
+  35:rules.c       **** 			eeprom_busy_wait ();
+ 945               	.LM76:
+ 946 03f2 E199      		sbic 60-32,1
+ 947 03f4 00C0      		rjmp .L96
+  36:rules.c       **** 			eeprom_write_byte((unsigned char *)(RULES_EEPROM_STORE),0);
+ 949               	.LM77:
+ 950 03f6 8FEF      		ldi r24,lo8(1023)
+ 951 03f8 93E0      		ldi r25,hi8(1023)
+ 952 03fa 60E0      		ldi r22,lo8(0)
+ 953 03fc 0E94 0000 		call __eewr_byte_m32
+  38:rules.c       **** 			usart_write("Rules counter set back to 0\r\n");
+ 955               	.LM78:
+ 956 0400 00D0      		rcall .
+ 957 0402 80E0      		ldi r24,lo8(__c.2030)
+ 958 0404 90E0      		ldi r25,hi8(__c.2030)
+ 959 0406 EDB7      		in r30,__SP_L__
+ 960 0408 FEB7      		in r31,__SP_H__
+ 961 040a 9283      		std Z+2,r25
+ 962 040c 8183      		std Z+1,r24
+ 963 040e 0E94 0000 		call usart_write_P
+ 964 0412 0F90      		pop __tmp_reg__
+ 965 0414 0F90      		pop __tmp_reg__
+ 966               	.L95:
+ 967 0416 0895      		ret
+ 969               	.Lscope7:
+ 971               		.stabd	78,0,0
+ 972               		.section	.progmem.data,"a",@progbits
+ 975               	__c.2030:
+ 976 0000 5275 6C65 		.string	"Rules counter set back to 0\r\n"
+ 976      7320 636F 
+ 976      756E 7465 
+ 976      7220 7365 
+ 976      7420 6261 
+ 977               		.comm buffercounter,2,1
+ 978               		.comm usart_rx_buffer,50,1
+ 979               		.comm rx_buffer_pointer_in,2,1
+ 980               		.comm rx_buffer_pointer_out,2,1
+ 981               		.comm usart_status,1,1
+ 982               		.comm retransmission_pointer,2,1
+ 983               		.comm telnetd_status,1,1
+ 984               		.comm mymac,6,1
+ 985               		.comm CountInt,8,1
+ 986               		.comm S0_adress,1,1
+ 987               		.comm time,4,1
+ 988               		.comm time_watchdog,4,1
+ 989               		.comm eth,1,1
+ 990               		.comm TCP_PORT_TABLE,20,1
+ 991               		.comm UDP_PORT_TABLE,20,1
+ 992               		.comm myip,4,1
+ 993               		.comm netmask,4,1
+ 994               		.comm router_ip,4,1
+ 995               		.comm IP_id_counter,2,1
+ 996               		.comm eth_buffer,601,1
+ 997               		.comm arp_entry,60,1
+ 998               		.comm tcp_entry,132,1
+ 1022               		.text
+ 1024               	.Letext0:
+ 1025               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:00000000 rules.c
+     /tmp/cct364S6.s:2      *ABS*:0000003f __SREG__
+     /tmp/cct364S6.s:3      *ABS*:0000003e __SP_H__
+     /tmp/cct364S6.s:4      *ABS*:0000003d __SP_L__
+     /tmp/cct364S6.s:5      *ABS*:00000034 __CCP__
+     /tmp/cct364S6.s:6      *ABS*:00000000 __tmp_reg__
+     /tmp/cct364S6.s:7      *ABS*:00000001 __zero_reg__
+     /tmp/cct364S6.s:135    .text:00000000 get_rule_count
+     /tmp/cct364S6.s:165    .text:0000000e eeprom_get_rule
+     /tmp/cct364S6.s:233    .text:00000056 eeprom_check_rule
+     /tmp/cct364S6.s:462    .text:00000174 eeprom_run_rule
+     /tmp/cct364S6.s:719    .text:000002e4 eeprom_del_rule
+     /tmp/cct364S6.s:855    .text:00000396 eeprom_add_rule
+     /tmp/cct364S6.s:929    .text:000003ea init_rule
+     /tmp/cct364S6.s:975    .progmem.data:00000000 __c.2030
+                            *COM*:00000002 buffercounter
+                            *COM*:00000032 usart_rx_buffer
+                            *COM*:00000002 rx_buffer_pointer_in
+                            *COM*:00000002 rx_buffer_pointer_out
+                            *COM*:00000001 usart_status
+                            *COM*:00000002 retransmission_pointer
+                            *COM*:00000001 telnetd_status
+                            *COM*:00000006 mymac
+                            *COM*:00000008 CountInt
+                            *COM*:00000001 S0_adress
+                            *COM*:00000004 time
+                            *COM*:00000004 time_watchdog
+                            *COM*:00000001 eth
+                            *COM*:00000014 TCP_PORT_TABLE
+                            *COM*:00000014 UDP_PORT_TABLE
+                            *COM*:00000004 myip
+                            *COM*:00000004 netmask
+                            *COM*:00000004 router_ip
+                            *COM*:00000002 IP_id_counter
+                            *COM*:00000259 eth_buffer
+                            *COM*:0000003c arp_entry
+                            *COM*:00000084 tcp_entry
+
+UNDEFINED SYMBOLS
+__eerd_byte_m32
+__eerd_block_m32
+__eewr_block_m32
+__eewr_byte_m32
+usart_write_P
+__do_clear_bss
