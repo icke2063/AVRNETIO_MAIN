@@ -24,13 +24,16 @@
 #ifndef _WEBPAGE_H
 	#define _WEBPAGE_H
 
+
+#include "config.h"
 #include "base_webpage.h"
-#include "rules/rules_webpage.h"
+#if USE_RULES
+	#include "rules_webpage.h"
+#endif
 
 //****************************************************************************
 //Dateien und Webseiten am Ende dieser Seite in Tabelle eintragen !!!!!!!
 //****************************************************************************
-
 
 //----------------------------------------------------------------------------
 //Dazustellende Webseite
@@ -68,32 +71,6 @@
 	"</table>\r\n"
 
 
-
-
-// 1-Wire ------------------------------------------------------------------
-#if USE_OW
-
-  "<div class=\"fett\">1-Wire-Temperatursensoren:</div>\r\n"
-
-  "<table style=\"width: 600px; text-align: left; background-color: rgb(255, 255, 102);\" border=\"0\">\r\n"
-  "<tr><td>1-Wire</td><td>Ort</td><td align=\"right\">Wert</td><td align=\"left\">Einheit</td><td>Min/Max(Tag)</td></tr>\r\n"
-  "<tr><td>Sensor 0</td><td>"T00"</td><td align=\"right\">%OW@00</td><td align=\"left\">&deg;C</td><td>%OW@08 / %OW@16</td></tr>\r\n"
-//  "<tr><td>Sensor 1</td><td>"T01"</td><td align=\"right\">%OW@01</td><td align=\"left\">&deg;C</td><td>%OW@09 / %OW@17</td></tr>\r\n"
-//  "<tr><td>Sensor 2</td><td>"T02"</td><td align=\"right\">%OW@02</td><td align=\"left\">&deg;C</td><td>%OW@10 / %OW@18</td></tr>\r\n"
-//  "<tr><td>Sensor 3</td><td>"T03"</td><td align=\"right\">%OW@03</td><td align=\"left\">&deg;C</td><td>%OW@11 / %OW@19</td></tr>\r\n"
-//  "<tr><td>Sensor 4</td><td>"T04"</td><td align=\"right\">%OW@04</td><td align=\"left\">&deg;C</td><td>%OW@12 / %OW@20</td></tr>\r\n"
-
-// Je nach Bedarf weitere Zeilen einfuegen
-//  "<tr><td>Sensor 5</td><td>"T05"</td><td align=\"right\">%OW@05</td><td align=\"left\">&deg;C</td><td>%OW@13 / %OW@21</td></tr>\r\n"
-//  "<tr><td>Sensor 6</td><td>"T06"</td><td align=\"right\">%OW@06</td><td align=\"left\">&deg;C</td><td>%OW@14 / %OW@22</td></tr>\r\n"
-//  "<tr><td>Sensor 7</td><td>"T07"</td><td align=\"right\">%OW@07</td><td align=\"left\">&deg;C</td><td>%OW@15 / %OW@23</td></tr>\r\n"	
-
-  "</table>\r\n"
-
-#endif
-// 1-Wire -------------------------------------------------------------------
-
-
 // => Schalten mit PORTC
 // checkbox-value-Werte A-H -> httpd
 
@@ -115,33 +92,11 @@
 // Daten-Seite: 1-Wire-Werte, AD-Werte  
 PROGMEM char Page2[] = {
 
-#if USE_OW
-	// 1-Wire Sensoren -> Temperatur
-	"%OW@00\r\n"
-	"%OW@01\r\n"
-	"%OW@02\r\n"
-	"%OW@03\r\n"
-	"%OW@04\r\n"
-
-// Je nach Bedarf weitere Ausgabewerte einfuegen
-//	"%OW@05\r\n"
-//	"%OW@06\r\n"
-//	"%OW@07\r\n"
-#endif // USE_OW
-
 	// AD-Werte
 	"%VA@04\r\n"
 	"%VA@05\r\n"
 	"%VA@06\r\n"
 	"%END"};
-
-
-#if USE_RULE
-PROGMEM char Rules[] = {
-	"%RULES\r\n"
-	"%END"};
-#endif
-
 
 PROGMEM char EEProm[] = {
 		"<form name=\"form2\" method=\"post\" action=\" \">"
@@ -151,12 +106,12 @@ PROGMEM char EEProm[] = {
 		"<input type=\"submit\" name=\"SUB\" value=\"Senden\">"
 		"</form>\r\n"
 	"%EEPROM<br>\r\n"
-
-	"NAME:70:454\r\n"
-
-
 	"%END"};
-
+#if USE_RULES
+PROGMEM char Rules[] = {
+	"%RULES\r\n"
+	"%END"};
+#endif
 
 //----------------------------------------------------------------------------
 //Das GIF Bild f�r den Balken
@@ -173,7 +128,7 @@ PROGMEM char EEProm[] = {
 	{"index.htm",Page1},
 	{"daten.html",Page2},
 	{"eeprom.html",EEProm},
-#if	USE_RULE
+#if	USE_RULES
 	{"rules.html",Rules},
 #endif
 //	{"balke.gif",bild_balken},

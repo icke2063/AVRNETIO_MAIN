@@ -5,9 +5,14 @@
  *      Author: icke
  */
 
-// RULES
 #include "base_webpage.h"
 #include "httpd.h"
+
+#if USE_ADC
+
+#include "analog.h"
+
+#endif
 
 static unsigned char base_position = 0;
 
@@ -78,13 +83,6 @@ unsigned char base_create_httpd_data(unsigned char** new_page_pointer, char *var
 				tog = DIG_IMP_PA;
 				adc = ADC_PA;
 
-					pin_value = PINA;
-					pin_value = pin_value & 0x0F;
-
-					itoa (pin_value,var_conversion_buffer,10);
-									str_len = strnlen(var_conversion_buffer,CONVERSION_BUFFER_LEN);
-									memmove(&eth_buffer[TCP_DATA_START+a],var_conversion_buffer,str_len);
-									a = a + (str_len-1);
 					pin_value = PINA;
 					pin_value = (pin_value & (1<<pin));
 

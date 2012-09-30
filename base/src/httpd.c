@@ -23,9 +23,10 @@
 ------------------------------------------------------------------------------*/
 #include "httpd.h"
 #include "webpage.h"
+#include "config.h"
 
-#if USE_RULE
-#include "rules/rules_webpage.h"
+#if USE_RULES
+#include "rules_webpage.h"
 #endif
 
 
@@ -355,10 +356,6 @@ void httpd_header_check (unsigned char index)
 				toggle_PD(TOGG_tmp_D);
 				TOGG_tmp_D = 0;
 
-
-
-
-
 				break;
 				//Submit gefunden
 			}
@@ -501,6 +498,11 @@ void httpd_data_send (unsigned char index)
 
 
 			if(base_create_httpd_data(&http_entry[index].new_page_pointer, var_conversion_buffer,eth_buffer,&a)>0)continue;
+
+
+#if USE_RULES
+			if(rules_create_httpd_data(&http_entry[index].new_page_pointer, var_conversion_buffer,eth_buffer,&a)>0)continue;
+#endif
 
 
 			// Variable
@@ -729,8 +731,6 @@ void httpd_data_send (unsigned char index)
 
 void toggle_PA (uint8_t porta)
 {
-
-
 	for(int i=0;i<8;i++){
 		if(OUTA & porta & (1<<i)){
 		      HTTP_DEBUG("Toggle PA(%i)\r\n",i);

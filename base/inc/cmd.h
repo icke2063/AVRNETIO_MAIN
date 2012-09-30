@@ -34,6 +34,10 @@
 	#include "httpd.h"
 	#include <util/delay.h>
 	
+
+#if USE_RULES
+	#include "rules.h"
+#endif
 	
 	typedef struct
 	{
@@ -89,4 +93,16 @@
 	
 	#define RESET() {asm("ldi r30,0"); asm("ldi r31,0"); asm("ijmp");}
 	
+
+#if USE_RULES
+	extern void add_rule (void);
+	extern void del_rule (void);
+	extern void show_rule (void);
+	extern void list_rules (void);
+	extern void check_rule (void);
+	extern void run_rule (void);
+#endif
+
+
+
 #endif //_CMD_H_

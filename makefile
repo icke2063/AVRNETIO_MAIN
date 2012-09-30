@@ -92,11 +92,15 @@ LOCAL_SRC += 	base/src/httpd.c	\
 	base/src/http_get.c	\
 	base/src/base_webpage.c
 
+#ADC
+ LOCAL_SRC += base/src/analog.c
+
 # extra functions
 
+#RULES
+ LOCAL_SRC += extra/rules/src/rules.c extra/rules/src/rules_webpage.c
 
-#ADC
-#SRC += ADC/src/analog.c
+
 #NTP
 #SRC += NTP/src/ntp.c
 
@@ -136,7 +140,8 @@ ASRC =
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
-EXTRAINCDIRS =base/config/ base/inc/
+EXTRAINCDIRS =	base/config/ base/inc/ 					\
+				extra/rules/inc/ extra/rules/config/
 
 
 # Optional compiler flags.
@@ -368,6 +373,7 @@ program: $(TARGET).hex $(TARGET).eep
 # Copy src files into build directory
 copysrc: $(BUILD_DIR)
 	cp -r base -t $(BUILD_DIR)/
+	cp -r extra -t $(BUILD_DIR)/
 
 
 # Create final output files (.hex, .eep) from ELF output file.

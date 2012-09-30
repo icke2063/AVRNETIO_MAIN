@@ -33,6 +33,9 @@
     #include "analog.h"
 #endif
 
+#if USE_RULES
+    #include "rules.h"
+#endif
 
 
 #include "usart.h"
@@ -129,6 +132,11 @@ int main(void)
 		ADC_Init();
 	#endif
 	
+	#if USE_RULES
+		init_rule();
+	#endif
+
+
 	usart_write("\n\rSystem Ready\n\r");
     usart_write("Compiliert am "__DATE__" um "__TIME__"\r\n");
     usart_write("Compiliert mit GCC Version "__VERSION__"\r\n");
@@ -183,6 +191,21 @@ int main(void)
 	hh = (time/3600)%24;
 	mm = (time/60)%60;
 	ss = time%60;
+
+
+#if USE_RULES
+	// rulen bei ss=9,19,29,39,49,59
+		if ( ss%10 == 9 )
+	{
+	  uint8_t count,pos;
+
+	  count=get_rule_count();
+	  for(pos=0;pos<count;pos++)
+	  {
+		eeprom_run_rule(pos);
+	  }
+	}
+#endif //USE_RULES
 
 
 	//USART Daten f�r Telnetanwendung?

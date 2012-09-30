@@ -10,7 +10,7 @@
 #include "rules.h"
 #include "rules_config.h"
 
-#if USE_RULE
+#if USE_RULES
 uint8_t get_rule_count(void)
 {
     uint8_t count;

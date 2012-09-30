@@ -163,7 +163,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 
 /* Feature list */
-#define USE_ADC			0
+#define USE_ADC			1
+#define USE_RULES		1
 
 #include "eeprom_mapping.h"
 

@@ -60,6 +60,15 @@ COMMAND_STRUCTUR COMMAND_TABELLE[] = // Befehls-Tabelle
 	{"eeprom_read",eeprom_read},
   {"eeprom_write",eeprom_write},
 	
+#if USE_RULES
+  {"A_R",add_rule},
+  {"D_R",del_rule},
+  {"S_R",show_rule},
+  {"L_R",list_rules},
+  {"C_R",check_rule},
+  {"R_R",run_rule},
+#endif
+
 	
 	{NULL,NULL} 
 };
@@ -87,7 +96,17 @@ COMMAND_STRUCTUR COMMAND_TABELLE[] = // Befehls-Tabelle
 //		"VER    - list version number\r\n"
 		"SV     - set variable\r\n"
 //		"PING   - send Ping\r\n"
+#if USE_RULES
+		"A_R     - add new Rule to EEPROM\r\n"
+		"           [A..D,L,W];[0..255];[<,>,=,!,~];[A..D,L,W];[A..D];[0..7];[0..1]\r\n"
+		"           If (PINA1>55)then PORTC3=EIN -> [A][1][>][W][55][C][3][1]\r\n"
+		"D_R     - delete rule [0..99]\r\n"
+		"S_R     - show rule [0..99]\r\n"
+		"L_R     - list all rules\r\n"
+		"C_R     - check rule [0..99]\r\n"
+		"R_R     - run rule [0..99]"
 
+#endif
 	};
 #endif
 
@@ -442,3 +461,83 @@ void eeprom_write (void)
 			eeprom_write_byte((unsigned char *)(addi),variable[1]);
 		
 }
+
+#if USE_RULES
+	void add_rule (void)
+	{
+    RULES_STRUCTUR tmp;
+
+    tmp.elem_A=(unsigned char)variable[0];
+    tmp.elem_A_ID=(uint8_t)variable[1];
+    tmp.comp=(unsigned char)variable[2];
+    tmp.elem_B=(unsigned char)variable[3];
+    tmp.elem_B_ID=(uint8_t)variable[4];
+    tmp.actor=(unsigned char)variable[5];
+    tmp.act_ID=(uint8_t)variable[6];
+    tmp.act_value=(uint8_t)variable[7];
+
+
+    eeprom_add_rule(&tmp);
+
+    usart_write("Regel:If ( %c%i %c %c%i ) then %c%i = %i \r\n",tmp.elem_A,tmp.elem_A_ID,tmp.comp,tmp.elem_B,tmp.elem_B_ID,tmp.actor,tmp.act_ID,tmp.act_value);
+
+  }
+
+
+  void del_rule (void)
+	{
+    uint8_t erg;
+
+    if(eeprom_del_rule(variable[0]))
+    {
+      usart_write("Regel(%i)entfernen:%i \r\n",variable[0],erg);
+    }
+  }
+
+  void show_rule (void)
+	{
+    RULES_STRUCTUR tmp;
+
+    if(eeprom_get_rule(variable[0],&tmp))
+    {
+      usart_write("Regel(%i):If ( %c%i %c %c%i ) then %c%i = %i \r\n",variable[0],tmp.elem_A,tmp.elem_A_ID,tmp.comp,tmp.elem_B,tmp.elem_B_ID,tmp.actor,tmp.act_ID,tmp.act_value);
+		}
+
+  }
+
+  void run_rule (void)
+	{
+    if(eeprom_run_rule(variable[0]))
+    {
+      usart_write("Regel(%i): erfolgreich \r\n",variable[0]);
+		}
+
+  }
+
+  void list_rules (void)
+  {
+    uint8_t count,i;
+    RULES_STRUCTUR hilf;
+
+    //aktuelle Anzahl auslesen
+		count = get_rule_count();
+
+		for(i=1;i<=count;i++)
+    {
+      if(eeprom_get_rule(i,&hilf))
+      {
+        usart_write("Regel(%i): If ( %c%i %c %c%i ) then %c%i = %i \r\n",i,hilf.elem_A,hilf.elem_A_ID,hilf.comp,hilf.elem_B,hilf.elem_B_ID,hilf.actor,hilf.act_ID,hilf.act_value);
+      }
+
+		}
+
+
+  }
+
+  void check_rule (void)
+  {
+    usart_write("Regel (%i) = %i\r\n",variable[0],eeprom_check_rule(variable[0]));
+  }
+
+
+  #endif

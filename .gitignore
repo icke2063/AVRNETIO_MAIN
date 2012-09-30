@@ -1,2 +1,4 @@
 build
 Hexfiles
+*.hex
+Hexfiles/AVR-NET-IO_RoBue_V1.5_minimal.hex Hexfiles/AVR-NET-IO_RoBue_V1.5_minimal_LCD.hex Hexfiles/Webserver_MEGA32.hex

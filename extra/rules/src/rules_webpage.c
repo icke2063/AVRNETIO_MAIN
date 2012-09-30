@@ -7,8 +7,11 @@
 
 // RULES
 #include "rules_webpage.h"
-#include "../httpd.h"
-#if USE_RULE
+#include "httpd.h"
+#include "rules.h"
+#include "eeprom_mapping.h"
+
+#if USE_RULES
 static unsigned char rule = 0;
 
 unsigned char rules_create_httpd_data(unsigned char** new_page_pointer, char *var_conversion_buffer,unsigned char *eth_buffer,unsigned int *pos){
@@ -49,7 +52,7 @@ unsigned char rules_create_httpd_data(unsigned char** new_page_pointer, char *va
 
 				RULES_STRUCTUR cur_rul;
 
-				while( (rule<=count) && (a<(MTU_SIZE-(TCP_DATA_START)-10)) ){
+				while( (rule<count) && (a<(MTU_SIZE-(TCP_DATA_START)-10)) ){
 
 					//Rule
 					itoa(rule,var_conversion_buffer,10);
@@ -120,7 +123,7 @@ unsigned char rules_create_httpd_data(unsigned char** new_page_pointer, char *va
 
 				}
 
-				if(rule>count)
+				if(rule>count || count == 0)
 				{
 					//end of operation
 					*new_page_pointer = *new_page_pointer + 5;
